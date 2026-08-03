@@ -1,0 +1,461 @@
+package com.sanguosha.network;
+
+import com.google.gson.Gson;
+import com.sanguosha.SanguoshaMod;
+import com.sanguosha.card.CardDefinition;
+import com.sanguosha.game.GameManager;
+import com.sanguosha.game.GamePlayer;
+import com.sanguosha.game.SanguoshaGame;
+import com.sanguosha.game.Team;
+import com.sanguosha.hero.HeroDefinition;
+import com.sanguosha.skill.Skill;
+import com.sanguosha.skill.SkillRegistry;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerPlayer;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
+import net.neoforged.neoforge.network.PacketDistributor;
+
+import java.util.*;
+
+/** 服务器端处理客户端动作 */
+public final class ServerPayloadHandler {
+    private static final Gson GSON = new Gson();
+    private ServerPayloadHandler() {}
+
+    public static void handleAction(ActionPacket packet, IPayloadContext context) {
+        context.enqueueWork(() -> {
+            ServerPlayer player = (ServerPlayer) context.player();
+            SanguoshaGame game = GameManager.get();
+            switch (packet.action()) {
+                case ActionPacket.JOIN -> game.join(player);
+                case ActionPacket.START -> game.start();
+                case ActionPacket.SORT_HAND -> game.sortHand(player);
+                case ActionPacket.LEAVE -> game.leave(player);
+                case ActionPacket.RESET -> GameManager.reset();
+                case ActionPacket.SELECT_HERO -> game.selectHero(player, packet.heroId());
+                case ActionPacket.PLAY_CARD -> game.playCard(player, packet.cardIndex(), packet.targetSeat());
+                case ActionPacket.PASS -> game.passTurn(player);
+                case ActionPacket.DISCARD -> game.discardCard(player, packet.cardIndex());
+                case ActionPacket.RESPOND_YES -> game.submitResponse(player, true, packet.cardIndex());
+                case ActionPacket.RESPOND_NO -> game.submitResponse(player, false, -1);
+                case ActionPacket.CONVERT_PLAY -> game.playCardConverted(player, packet.cardIndex(), packet.targetSeat(), packet.heroId());
+                case ActionPacket.SKILL -> game.useSkill(player, packet.heroId());
+                case ActionPacket.RECAST -> game.recastCard(player, packet.cardIndex());
+                case ActionPacket.LIJIAN -> game.useLijian(player, packet.targetSeat(), Integer.parseInt(packet.heroId()));
+                case ActionPacket.RENDE -> game.useRende(player, packet.cardIndex(), packet.targetSeat());
+                case ActionPacket.CHOICE -> game.submitChoice(player, packet.cardIndex());
+                case ActionPacket.FANJIAN -> game.useFanjian(player, packet.targetSeat());
+            case ActionPacket.HP_UP -> {
+                int hpU = com.sanguosha.game.PlayerHp.adjust(player.getUUID(), 1);
+                com.sanguosha.SanguoshaMod.LOGGER.info("[HP] server adjust up -> {}", hpU);
+                player.displayClientMessage(net.minecraft.network.chat.Component.literal("♥ 血量: " + hpU), true);
+                syncAll(game, player.server);
+            }
+            case ActionPacket.PLACE_CARD -> placeSelectedCard(player, packet.cardIndex());
+            case ActionPacket.DROP_CARD -> dropSelectedCard(player, packet.cardIndex());
+            case ActionPacket.DEMOLISH -> demolishCard(player, packet.heroId(), packet.cardIndex(), packet.responded());
+            case ActionPacket.CLEAR_CARDS -> clearCards(player);
+            case ActionPacket.REMAIN_TAKE -> remainTake(player, packet.heroId(), packet.cardIndex());
+            case ActionPacket.REMAIN_SHUFFLE -> remainShuffle(player, packet.heroId());
+            case ActionPacket.GUANXING_VIEW -> guanXingView(player, packet.heroId());
+            case ActionPacket.GUANXING_CONFIRM -> guanXingConfirm(player, packet.heroId());
+            case ActionPacket.HP_DOWN -> {
+                int hpD = com.sanguosha.game.PlayerHp.adjust(player.getUUID(), -1);
+                com.sanguosha.SanguoshaMod.LOGGER.info("[HP] server adjust down -> {}", hpD);
+                player.displayClientMessage(net.minecraft.network.chat.Component.literal("♥ 血量: " + hpD), true);
+                syncAll(game, player.server);
+            }
+                default -> {}
+            }
+            syncAll(game, player.server);
+        });
+    }
+
+    /** 手牌 UI 选中的牌放置到地上(准星指向的方块表面,面向玩家) */
+    private static void placeSelectedCard(ServerPlayer player, int index) {
+        int found = 0;
+        int slot = -1;
+        for (int i = 0; i < player.getInventory().items.size(); i++) {
+            net.minecraft.world.item.ItemStack s = player.getInventory().items.get(i);
+            if (!s.isEmpty() && s.is(com.sanguosha.item.ModItems.CARD.get())) {
+                if (found == index) { slot = i; break; }
+                found++;
+            }
+        }
+        if (slot < 0) return;
+        net.minecraft.world.item.ItemStack card = player.getInventory().items.get(slot);
+        String info = card.get(com.sanguosha.item.CardData.CARD_INFO);
+        if (info == null || info.isEmpty()) return;
+        net.minecraft.world.phys.HitResult hit = player.pick(5.0, 0.0F, false);
+        net.minecraft.world.phys.Vec3 pos;
+        if (hit != null && hit.getType() == net.minecraft.world.phys.HitResult.Type.BLOCK) {
+            net.minecraft.world.phys.Vec3 loc = hit.getLocation();
+            pos = new net.minecraft.world.phys.Vec3(Math.floor(loc.x) + 0.5, Math.floor(loc.y) + 0.05, Math.floor(loc.z) + 0.5);
+        } else {
+            net.minecraft.world.phys.Vec3 eye = player.getEyePosition();
+            net.minecraft.world.phys.Vec3 look = player.getLookAngle();
+            pos = new net.minecraft.world.phys.Vec3(eye.x + look.x * 2.5, eye.y + look.y * 2.5, eye.z + look.z * 2.5);
+        }
+        float rot = 180.0F - player.getYRot(); // 牌顶朝玩家面朝方向(渲染逆时针 vs yRot 顺时针,南北需转 180)
+        com.sanguosha.entity.CardEntity e = new com.sanguosha.entity.CardEntity(player.serverLevel(), pos.x, pos.y, pos.z, info, rot);
+        player.serverLevel().addFreshEntity(e);
+        player.getInventory().removeItem(slot, 1);
+        player.displayClientMessage(net.minecraft.network.chat.Component.literal("已放置: " + info.split("\\|")[0]), true);
+    }
+
+    /** 丢出选中的牌(原版凋落物:player.drop,像原版按 Q 丢物品) */
+    private static void dropSelectedCard(ServerPlayer player, int index) {
+        int found = 0;
+        int slot = -1;
+        for (int i = 0; i < player.getInventory().items.size(); i++) {
+            net.minecraft.world.item.ItemStack s = player.getInventory().items.get(i);
+            if (!s.isEmpty() && s.is(com.sanguosha.item.ModItems.CARD.get())) {
+                if (found == index) { slot = i; break; }
+                found++;
+            }
+        }
+        if (slot < 0) return;
+        // 先 copy:removeItem 会修改原 ItemStack 对象(数量归零),直接传引用会让凋落物内物品为空,被原版 tick 立即销毁
+        net.minecraft.world.item.ItemStack card = player.getInventory().items.get(slot).copy();
+        player.getInventory().removeItem(slot, 1);
+        player.drop(card, false); // 原版丢物品:生成凋落物在玩家面前
+        com.sanguosha.SanguoshaMod.LOGGER.info("[DROP] card dropped via player.drop");
+        syncHpList(player.server);
+    }
+
+    /** 过河拆桥:丢弃目标手牌;顺手牵羊:把目标手牌顺到自己手里 */
+    private static void demolishCard(ServerPlayer actor, String targetName, int index, boolean isShun) {
+        if (targetName == null || targetName.isEmpty()) return;
+        ServerPlayer target = actor.server.getPlayerList().getPlayerByName(targetName);
+        if (target == null) {
+            actor.displayClientMessage(net.minecraft.network.chat.Component.literal("目标玩家不在线"), true);
+            return;
+        }
+        int found = 0;
+        for (int i = 0; i < target.getInventory().items.size(); i++) {
+            net.minecraft.world.item.ItemStack s = target.getInventory().items.get(i);
+            if (!s.isEmpty() && s.is(com.sanguosha.item.ModItems.CARD.get())) {
+                if (found == index) {
+                    net.minecraft.world.item.ItemStack stolen = target.getInventory().removeItem(i, 1);
+                    String stolenInfo = stolen.get(com.sanguosha.item.CardData.CARD_INFO);
+                    String stolenName = stolenInfo != null ? stolenInfo.split("\\|")[0] : "一张牌";
+                    if (isShun) {
+                        if (actor.getInventory().add(stolen.copy())) {
+                            actor.displayClientMessage(net.minecraft.network.chat.Component.literal("顺走了 " + targetName + " 的【" + stolenName + "】"), true);
+                        } else {
+                            target.getInventory().add(stolen); // 背包满,还回去
+                            actor.displayClientMessage(net.minecraft.network.chat.Component.literal("你的背包已满,无法顺牌!"), true);
+                        }
+                    } else {
+                        // 拆:被拆的牌掉出来显示(牌面朝上)
+                        if (stolenInfo != null) {
+                            net.minecraft.world.phys.Vec3 eye = actor.getEyePosition();
+                            net.minecraft.world.phys.Vec3 look = actor.getLookAngle();
+                            net.minecraft.world.phys.Vec3 pos = eye.add(look.scale(2.0));
+                            com.sanguosha.entity.CardEntity ce = new com.sanguosha.entity.CardEntity(
+                                    actor.serverLevel(), pos.x, pos.y, pos.z, stolenInfo, -actor.getYRot());
+                            actor.serverLevel().addFreshEntity(ce);
+                        }
+                        actor.displayClientMessage(net.minecraft.network.chat.Component.literal("拆掉了 " + targetName + " 的【" + stolenName + "】"), true);
+                    }
+                    target.displayClientMessage(net.minecraft.network.chat.Component.literal(actor.getName().getString() + (isShun ? " 顺走了你的一张手牌" : " 拆了你的一张手牌")), true);
+
+                    syncHpList(actor.server);
+                    return;
+                }
+                found++;
+            }
+        }
+        actor.displayClientMessage(net.minecraft.network.chat.Component.literal("目标没有可" + (isShun ? "顺" : "拆") + "的手牌"), true);
+    }
+
+    /** 一键清理地上所有卡牌(保留牌盒/将盒实体)。返回清理数量 */
+    public static int clearCards(ServerPlayer player) {
+        java.util.List<com.sanguosha.entity.CardEntity> cards = player.serverLevel().getEntitiesOfClass(
+                com.sanguosha.entity.CardEntity.class, player.getBoundingBox().inflate(64));
+        int n = 0;
+        for (com.sanguosha.entity.CardEntity e : cards) {
+            String info = e.getCardInfo();
+            if (info != null && (info.startsWith("牌盒:") || info.startsWith("将盒:"))) continue;
+            e.discard();
+            n++;
+        }
+        player.displayClientMessage(net.minecraft.network.chat.Component.literal("已清理 " + n + " 张地上的卡牌"), true);
+        com.sanguosha.SanguoshaMod.LOGGER.info("[CLEAR] removed {} cards", n);
+        return n;
+    }
+
+    /** 剩余 UI 拿取:从牌盒/将盒剩余堆抽一张给玩家 */
+    private static void remainTake(ServerPlayer player, String enc, int index) {
+        String type = parseType(enc);
+        net.minecraft.core.BlockPos pos = parsePos(enc);
+        if (pos == null) return;
+        if ("hero".equals(type)) {
+            com.sanguosha.hero.HeroDefinition h = com.sanguosha.item.BoxDeckManager.heroDeck(pos).take(index);
+            if (h == null) return;
+            net.minecraft.world.item.ItemStack heroCard = new net.minecraft.world.item.ItemStack(com.sanguosha.item.ModItems.CARD.get());
+            String heroInfo = "\u6b66\u5c06:" + h.id + "|" + h.name;
+            heroCard.set(com.sanguosha.item.CardData.CARD_INFO, heroInfo);
+            heroCard.set(net.minecraft.core.component.DataComponents.ITEM_NAME, net.minecraft.network.chat.Component.literal("\u3010" + h.name + "\u3011"));
+            heroCard.set(net.minecraft.core.component.DataComponents.CUSTOM_MODEL_DATA, new net.minecraft.world.item.component.CustomModelData(com.sanguosha.item.CardModelIds.heroIdOf(h.id)));
+            if (player.getInventory().add(heroCard)) {
+                player.displayClientMessage(net.minecraft.network.chat.Component.literal("\u62ff\u53d6\u6b66\u5c06: " + h.name), true);
+            } else {
+                player.displayClientMessage(net.minecraft.network.chat.Component.literal("\u80cc\u5305\u5df2\u6ee1"), true);
+            }
+        } else {
+            com.sanguosha.card.CardDefinition c = com.sanguosha.item.BoxDeckManager.cardDeck(pos).take(index);
+            if (c == null) return;
+            net.minecraft.world.item.ItemStack card = new net.minecraft.world.item.ItemStack(com.sanguosha.item.ModItems.CARD.get());
+            String cardInfo = c.name + "|" + c.suit.cn + "|" + c.rankText();
+            card.set(com.sanguosha.item.CardData.CARD_INFO, cardInfo);
+            card.set(net.minecraft.core.component.DataComponents.ITEM_NAME, net.minecraft.network.chat.Component.literal("\u3010" + c.name + "\u3011"));
+            card.set(net.minecraft.core.component.DataComponents.CUSTOM_MODEL_DATA, new net.minecraft.world.item.component.CustomModelData(com.sanguosha.item.CardModelIds.idOf(c.name)));
+            if (player.getInventory().add(card)) {
+                player.displayClientMessage(net.minecraft.network.chat.Component.literal("\u62ff\u53d6: " + c.name), true);
+            } else {
+                player.displayClientMessage(net.minecraft.network.chat.Component.literal("\u80cc\u5305\u5df2\u6ee1"), true);
+            }
+        }
+        sendRemain(player, pos, type);
+    }
+
+    /** 洗牌:重新洗该牌盒的独立牌堆 */
+    private static void remainShuffle(ServerPlayer player, String enc) {
+        String type = parseType(enc);
+        net.minecraft.core.BlockPos pos = parsePos(enc);
+        if (pos == null) return;
+        if ("hero".equals(type)) com.sanguosha.item.BoxDeckManager.heroDeck(pos).shuffle();
+        else com.sanguosha.item.BoxDeckManager.cardDeck(pos).shuffle();
+        sendRemain(player, pos, type);
+    }
+
+    /** "x,y,z,type" -> BlockPos;非法返回 null */
+    private static net.minecraft.core.BlockPos parsePos(String enc) {
+        String[] parts = enc.split(",");
+        if (parts.length < 4) return null;
+        try {
+            return new net.minecraft.core.BlockPos(Integer.parseInt(parts[0]), Integer.parseInt(parts[1]), Integer.parseInt(parts[2]));
+        } catch (NumberFormatException e) { return null; }
+    }
+
+    private static String parseType(String enc) {
+        String[] parts = enc.split(",");
+        return parts.length >= 4 ? parts[3] : "deck";
+    }
+
+    /** 发送牌盒/将盒剩余列表给玩家(打开/刷新 UI);按方块位置取独立牌堆 */
+    public static void sendRemain(ServerPlayer player, net.minecraft.core.BlockPos pos, String type) {
+        java.util.List<String> names = new java.util.ArrayList<>();
+        if ("hero".equals(type)) {
+            for (com.sanguosha.hero.HeroDefinition h : com.sanguosha.item.BoxDeckManager.heroDeck(pos).remainingList()) names.add(h.name);
+        } else {
+            for (com.sanguosha.card.CardDefinition c : com.sanguosha.item.BoxDeckManager.cardDeck(pos).remainingList()) {
+                names.add(c.suit.symbol + c.rankText() + " " + c.name);
+            }
+        }
+        PacketDistributor.sendToPlayer(player, new RemainSyncPacket(pos.getX(), pos.getY(), pos.getZ(), type, names));
+    }
+
+    /** 观星:发送牌堆顶 n 张(诸葛亮观星,线下模式);编码 "x,y,z,deck|n",默认 5 */
+    private static void guanXingView(ServerPlayer player, String enc) {
+        String[] parts = enc.split("\\|");
+        if (parts.length < 1) return;
+        net.minecraft.core.BlockPos pos = parsePos(parts[0]);
+        if (pos == null) return;
+        int count = 5;
+        if (parts.length > 1) {
+            try { count = Math.max(1, Math.min(5, Integer.parseInt(parts[1].trim()))); } catch (NumberFormatException ignored) {}
+        }
+        java.util.List<String> names = new java.util.ArrayList<>();
+        for (com.sanguosha.card.CardDefinition c : com.sanguosha.item.BoxDeckManager.cardDeck(pos).peekTop(count)) {
+            names.add(c.name + "|" + c.suit.cn + "|" + c.rankText());
+        }
+        PacketDistributor.sendToPlayer(player, new GuanXingSyncPacket(pos.getX(), pos.getY(), pos.getZ(), names));
+    }
+
+    /** 观星确认:按玩家顺序重排牌堆顶 n 张;编码 "x,y,z,deck|count|idx,idx,..."(idx 为原顶牌下标,未列出的放底) */
+    private static void guanXingConfirm(ServerPlayer player, String enc) {
+        String[] parts = enc.split("\\|");
+        if (parts.length < 1) return;
+        net.minecraft.core.BlockPos pos = parsePos(parts[0]);
+        if (pos == null) return;
+        int count = 5;
+        if (parts.length > 1) {
+            try { count = Math.max(1, Math.min(5, Integer.parseInt(parts[1].trim()))); } catch (NumberFormatException ignored) {}
+        }
+        java.util.List<Integer> order = new java.util.ArrayList<>();
+        if (parts.length > 2 && !parts[2].isEmpty()) {
+            for (String s : parts[2].split(",")) {
+                try { order.add(Integer.parseInt(s.trim())); } catch (NumberFormatException ignored) {}
+            }
+        }
+        com.sanguosha.item.LocalCardDeck deck = com.sanguosha.item.BoxDeckManager.cardDeck(pos);
+        deck.reorderTop(count, order);
+        player.displayClientMessage(net.minecraft.network.chat.Component.literal("\u89c2\u661f\u5b8c\u6210"), true);
+        com.sanguosha.SanguoshaMod.LOGGER.info("[GUANXING] reorder at {} count={} order={}", pos, count, order);
+    }
+
+    /** 轻量同步:只广播 hpList(手牌数/血量),摸牌丢牌后调用 */
+    public static void syncHpList(MinecraftServer server) {
+        if (server == null) return;
+        com.google.gson.JsonObject root = new com.google.gson.JsonObject();
+        com.google.gson.JsonArray hpList = new com.google.gson.JsonArray();
+        for (ServerPlayer p2 : server.getPlayerList().getPlayers()) {
+            com.google.gson.JsonObject m2 = new com.google.gson.JsonObject();
+            m2.addProperty("name", p2.getName().getString());
+            m2.addProperty("hp", com.sanguosha.game.PlayerHp.get(p2.getUUID()));
+            int hc = 0;
+            for (net.minecraft.world.item.ItemStack is : p2.getInventory().items) {
+                if (!is.isEmpty() && is.is(com.sanguosha.item.ModItems.CARD.get())) hc++;
+            }
+            m2.addProperty("handCount", hc);
+            hpList.add(m2);
+        }
+        root.add("hpList", hpList);
+        for (ServerPlayer sp : server.getPlayerList().getPlayers()) {
+            PacketDistributor.sendToPlayer(sp, new GameSyncPacket(root.toString()));
+        }
+    }
+
+    /** 全量同步给所有在线玩家(游戏内用其视角,游戏外用通用视角) */
+    public static void syncAll(SanguoshaGame game, MinecraftServer server) {
+        com.sanguosha.SanguoshaMod.LOGGER.info("[UPD] syncAll called, online={}", server.getPlayerList().getPlayers().size());
+        for (ServerPlayer sp : server.getPlayerList().getPlayers()) {
+            GamePlayer p = null;
+            for (GamePlayer gp : game.players()) {
+                if (gp.uuid.equals(sp.getUUID())) { p = gp; break; }
+            }
+            PacketDistributor.sendToPlayer(sp, new GameSyncPacket(buildJson(game, p)));
+        }
+    }
+
+    /** 构建每个玩家视角的 JSON(手牌私有) */
+    public static String buildJson(SanguoshaGame game, GamePlayer viewer) {
+        com.sanguosha.SanguoshaMod.LOGGER.info("[UPD] buildJson called viewer={}", viewer == null ? "null" : viewer.name);
+        Map<String, Object> root = new LinkedHashMap<>();
+        root.put("state", game.state().name());
+        root.put("phase", game.phase().name());
+        root.put("winner", game.winner() == null ? "" : game.winner().name());
+        root.put("currentSeat", game.currentPlayer() == null ? -1 : game.currentPlayer().seat);
+        root.put("lastLog", game.lastLog());
+        root.put("recentLogs", game.logHistory());
+        root.put("deckCount", game.deckCount());
+        root.put("discardCount", game.discardCount());
+        // 弃牌堆最近几张
+        List<String> discardTop = new ArrayList<>();
+        for (CardDefinition dc : game.recentDiscards(3)) discardTop.add(dc.name);
+        root.put("discardTop", discardTop);
+        // 出牌动画事件
+        root.put("animFrom", game.lastAnimFrom());
+        root.put("animTo", game.lastAnimTo());
+        root.put("animCard", game.lastAnimCard());
+        root.put("animSeq", game.animSeq());
+
+        // 响应提示
+        String prompt = "";
+        if (game.pendingResponder() != null && viewer != null && viewer.uuid.equals(game.pendingResponder().uuid)) {
+            prompt = game.pendingType(); // "jink" / "slash"
+        }
+        root.put("prompt", prompt);
+        root.put("mySeat", viewer == null ? -1 : viewer.seat);
+
+        // 选择弹窗(花色/改判/流离/观星)
+        String choicePrompt = "";
+        List<String> choiceOptions = new ArrayList<>();
+        if (game.pendingChoice() != null && viewer != null && viewer.uuid.equals(game.pendingChoice().target.uuid)) {
+            choicePrompt = game.pendingChoice().prompt;
+            Collections.addAll(choiceOptions, game.pendingChoice().options);
+        }
+        root.put("choicePrompt", choicePrompt);
+        root.put("choiceOptions", choiceOptions);
+
+        // 玩家列表(公共)
+        List<Map<String, Object>> players = new ArrayList<>();
+        for (GamePlayer p : game.players()) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("name", p.name);
+            m.put("seat", p.seat);
+            m.put("team", p.team == null ? "" : p.team.name());
+            m.put("hero", p.hero == null ? "" : p.hero.name);
+            m.put("heroId", p.hero == null ? "" : p.hero.id);
+            m.put("chained", p.chained);
+            m.put("drunk", p.drunk);
+            m.put("hp", p.hp);
+            m.put("maxHp", p.hero == null ? 0 : p.hero.maxHp);
+            m.put("alive", p.isAlive());
+            m.put("handCount", p.handCount());
+            m.put("weapon", p.weapon == null ? "" : p.weapon.name);
+            List<String> skillNames = new ArrayList<>();
+            if (p.hero != null) {
+                for (String sid : p.hero.skills) {
+                    Skill s = SkillRegistry.get(sid);
+                    if (s != null) skillNames.add(s.name() + "\u0001" + s.description());
+                }
+            }
+            m.put("skills", skillNames);
+            m.put("slashUsed", p.slashUsedThisTurn);
+            m.put("noSlashLimit", p.noSlashLimit);
+            m.put("armor", p.armor == null ? "" : p.armor.name);
+            m.put("horsePlus", p.horsePlus == null ? "" : p.horsePlus.name);
+            m.put("horseMinus", p.horseMinus == null ? "" : p.horseMinus.name);
+            List<String> judged = new ArrayList<>();
+            for (CardDefinition c : p.judgedZone) judged.add(c.name);
+            m.put("judged", judged);
+            players.add(m);
+        }
+        root.put("players", players);
+        List<Map<String, Object>> hpList = new ArrayList<>();
+        for (net.minecraft.server.level.ServerPlayer sp : net.neoforged.neoforge.server.ServerLifecycleHooks.getCurrentServer().getPlayerList().getPlayers()) {
+            Map<String, Object> m2 = new HashMap<>();
+            m2.put("name", sp.getName().getString());
+            m2.put("hp", com.sanguosha.game.PlayerHp.get(sp.getUUID()));
+            int hc = 0;
+            for (net.minecraft.world.item.ItemStack is : sp.getInventory().items) {
+                if (!is.isEmpty() && is.is(com.sanguosha.item.ModItems.CARD.get())) hc++;
+            }
+            m2.put("handCount", hc);
+            hpList.add(m2);
+        }
+        root.put("hpList", hpList);
+
+        // 自己的手牌
+        List<Map<String, Object>> hand = new ArrayList<>();
+        for (CardDefinition c : (viewer == null ? java.util.List.<CardDefinition>of() : viewer.hand)) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("id", c.id);
+            m.put("name", c.name);
+            m.put("suit", c.suit.name());
+            m.put("rank", c.rank);
+            m.put("cat", c.category.name());
+            m.put("effect", c.effect);
+            hand.add(m);
+        }
+        root.put("hand", hand);
+
+        // 选将选项
+        List<Map<String, Object>> heroOpts = new ArrayList<>();
+        for (HeroDefinition h : (viewer == null ? java.util.List.<HeroDefinition>of() : game.heroOptionsFor(viewer.uuid))) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("id", h.id);
+            m.put("name", h.name);
+            m.put("faction", h.faction.name());
+            m.put("maxHp", h.maxHp);
+            List<Map<String, Object>> skills = new ArrayList<>();
+            for (String sid : h.skills) {
+                Skill s = SkillRegistry.get(sid);
+                if (s != null) {
+                    Map<String, Object> sm = new LinkedHashMap<>();
+                    sm.put("name", s.name());
+                    sm.put("desc", s.description());
+                    skills.add(sm);
+                }
+            }
+            m.put("skills", skills);
+            heroOpts.add(m);
+        }
+        root.put("heroOptions", heroOpts);
+
+        return GSON.toJson(root);
+    }
+}

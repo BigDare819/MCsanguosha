@@ -1,0 +1,1 @@
+{ "textures": { "mat": "sanguosha:block/card_mat_32", "particle": "sanguosha:block/card_mat_32" }, "elements": [ { "from": [0, 0, 0], "to": [16, 1, 16], "faces": { "down": { "texture": "#mat", "cullface": "down" }, "up": { "texture": "#mat" }, "north": { "texture": "#mat" }, "south": { "texture": "#mat" }, "west": { "texture": "#mat" }, "east": { "texture": "#mat" } } } ] }

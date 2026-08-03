@@ -1,0 +1,17 @@
+{
+  "key.categories.sanguosha": "三国杀",
+  "key.sanguosha.hp_up": "血量+1",
+  "key.sanguosha.hp_down": "血量-1",
+  "key.sanguosha.toggle_ui": "开关手牌UI",
+  "key.sanguosha.place_card": "放置选中牌",
+  "key.sanguosha.open_table": "打开/关闭牌桌",
+  "key.sanguosha.drop_card": "丢出选中牌",
+  "key.sanguosha.clear_cards": "清理地上卡牌",
+  "block.sanguosha.deck_box_block": "牌盒",
+  "block.sanguosha.hero_deck_box_block": "将盒",
+  "block.sanguosha.card_mat": "牌布",
+  "item.sanguosha.card": "三国杀卡牌",
+  "item.sanguosha.deck_box": "牌盒",
+  "item.sanguosha.hero_deck_box": "将盒",
+  "item.sanguosha.card_mat": "牌布"
+}
