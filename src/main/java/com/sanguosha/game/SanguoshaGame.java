@@ -1,7 +1,6 @@
 package com.sanguosha.game;
 
 import com.sanguosha.SanguoshaMod;
-import com.sanguosha.card.CardCategory;
 import com.sanguosha.card.CardDefinition;
 import com.sanguosha.card.CardSuit;
 import com.sanguosha.card.Cards;

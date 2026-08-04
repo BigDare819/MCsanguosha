@@ -1,13 +1,13 @@
 {
-  "type": "minecraft:crafting_shaped",
-  "pattern": [
-    "CC"
-  ],
-  "key": {
-    "C": {
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "tag": "minecraft:wool_carpets"
+    },
+    {
       "tag": "minecraft:wool_carpets"
     }
-  },
+  ],
   "result": {
     "id": "sanguosha:card_mat",
     "count": 1

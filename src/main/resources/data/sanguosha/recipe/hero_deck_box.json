@@ -1,17 +1,19 @@
 {
-  "type": "minecraft:crafting_shaped",
-  "pattern": [
-    "PP",
-    "SS"
-  ],
-  "key": {
-    "P": {
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
       "tag": "minecraft:planks"
     },
-    "S": {
+    {
+      "tag": "minecraft:planks"
+    },
+    {
+      "tag": "minecraft:wooden_slabs"
+    },
+    {
       "tag": "minecraft:wooden_slabs"
     }
-  },
+  ],
   "result": {
     "id": "sanguosha:hero_deck_box",
     "count": 1

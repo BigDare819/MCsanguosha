@@ -23,7 +23,6 @@ import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -173,12 +172,16 @@ public final class CardMatScanner {
         Direction dir = s0.getValue(CardMatBlock.FACING);
         Direction right = dir.getClockWise();
         // 布面之上 0.02 ~ 1.2 格内的卡牌实体
-        // 布实际覆盖 start ~ start+right*3+dir*2(4x3 分片);牌实体中心在格中心(+0.5),
-        // bbox 半宽 0.275,故四方向再扩 0.8,避免北/西朝向时近端行/列的牌落在 AABB 外漏检
+        // 布实际覆盖 start ~ start+right*3+dir*2 的方块(4x3 分片),每块占据 [pos, pos+1)。
+        // AABB 边界 = 布对角方块起点 + 1.0(区域上界):布内最远边缘格(如 right 方向第 4 格
+        // [bx, bx+1))的牌中心在 bx+0.5、bbox 从 bx+0.225 起,必然 < bx+1 → 相交不漏检;
+        // 布外一格的牌 bbox 从 bx+1.225 起 > bx+1 → 不相交不误检。四朝向对称,无需外扩。
         double bx = start.getX() + right.getStepX() * 3.0 + dir.getStepX() * 2.0;
         double bz = start.getZ() + right.getStepZ() * 3.0 + dir.getStepZ() * 2.0;
-        double minX = Math.min(start.getX(), bx) - 0.8, maxX = Math.max(start.getX(), bx) + 0.8;
-        double minZ = Math.min(start.getZ(), bz) - 0.8, maxZ = Math.max(start.getZ(), bz) + 0.8;
+        double minX = Math.min(start.getX(), bx);
+        double maxX = Math.max(start.getX(), bx) + 1.0;
+        double minZ = Math.min(start.getZ(), bz);
+        double maxZ = Math.max(start.getZ(), bz) + 1.0;
         AABB box = new AABB(minX, start.getY() + 0.02, minZ, maxX, start.getY() + 1.2, maxZ);
         List<CardEntity> cards = level.getEntitiesOfClass(CardEntity.class, box);
         if (cards.isEmpty()) {

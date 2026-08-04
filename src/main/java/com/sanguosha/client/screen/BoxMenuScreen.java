@@ -1,12 +1,8 @@
 package com.sanguosha.client.screen;
-
-import com.sanguosha.network.ActionPacket;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.neoforged.neoforge.network.PacketDistributor;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /** 牌盒/将盒上级界面:查看剩余 / 观星(仅牌盒)入口 */

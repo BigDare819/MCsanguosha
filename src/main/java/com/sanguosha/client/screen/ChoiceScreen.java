@@ -1,6 +1,5 @@
 package com.sanguosha.client.screen;
 
-import com.sanguosha.client.ClientGameState;
 import com.sanguosha.network.ActionPacket;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;

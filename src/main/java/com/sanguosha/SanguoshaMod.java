@@ -32,6 +32,7 @@ public class SanguoshaMod {
         NeoForge.EVENT_BUS.addListener(SanguoshaMod::registerCommands);
         NeoForge.EVENT_BUS.addListener(CardPlaceEvents::onRightClickEntity);
         NeoForge.EVENT_BUS.addListener(com.sanguosha.item.CardMatEvents::onUse);
+        NeoForge.EVENT_BUS.addListener(com.sanguosha.block.CardBoxInteractEvents::onRightClickBlock);
         LOGGER.info("[Sanguosha] 三国杀模组加载完成");
     }
 

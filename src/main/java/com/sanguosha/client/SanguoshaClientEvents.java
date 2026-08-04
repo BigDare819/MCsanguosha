@@ -1,23 +1,17 @@
 package com.sanguosha.client;
 
-import com.mojang.blaze3d.platform.InputConstants;
 import com.sanguosha.SanguoshaMod;
 import com.sanguosha.audio.AudioManager;
 import com.sanguosha.audio.ModSounds;
-import net.minecraft.client.Minecraft;
 import com.sanguosha.client.screen.ChoiceScreen;
-import com.sanguosha.client.screen.LobbyScreen;
 import com.sanguosha.client.screen.HeroSelectScreen;
 import com.sanguosha.client.screen.SanguoshaScreen;
-import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
-import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.event.RenderGuiEvent;
-import org.lwjgl.glfw.GLFW;
 
 /** 客户端事件:按键、HUD、选将弹窗 */
 @EventBusSubscriber(modid = SanguoshaMod.MODID, value = Dist.CLIENT)

@@ -1,16 +1,13 @@
 {
-  "type": "minecraft:crafting_shaped",
-  "pattern": [
-    "PS"
-  ],
-  "key": {
-    "P": {
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
       "tag": "minecraft:planks"
     },
-    "S": {
+    {
       "tag": "minecraft:wooden_slabs"
     }
-  },
+  ],
   "result": {
     "id": "sanguosha:deck_box",
     "count": 1

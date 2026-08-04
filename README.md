@@ -1,27 +1,55 @@
+## 功能
 
-Installation information
-=======
+  - 牌盒/将盒(方块)、牌布(地毯,右键一键铺 4x3)、实体卡牌可放桌上
+  - 蹲下右键牌盒:查看剩余 / 洗牌 / 观星(诸葛亮)
+  - 手牌 HUD + 快捷键:X/Z 血量、R 放置、Q 丢出、G 牌桌、V 清理
 
-This template repository can be directly cloned to get you started with a new
-mod. Simply create a new repository cloned from this one, by following the
-instructions at [github](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-repository-from-a-template).
+## 合成配方
 
-Once you have your clone, simply open the repository in the IDE of your choice. The usual recommendation for an IDE is either IntelliJ IDEA or Eclipse.
+| 物品 | 配方 |
+|---|---|
+| 牌盒 | 任意木板 ×1 + 任意木台阶 ×1(无序) |
+| 将盒 | 任意木板 ×2 + 任意木台阶 ×2(无序) |
+| 牌布 | 任意地毯 ×2(无序) |
 
-> **Note**: For Eclipse, use tasks in `Launch Group` instead of ones founds in `Java Application`. A preparation task must run before launching the game. NeoGradle uses launch groups to do these subsequently.
 
-If at any point you are missing libraries in your IDE, or you've run into problems you can
-run `gradlew --refresh-dependencies` to refresh the local cache. `gradlew clean` to reset everything 
-{this does not affect your code} and then start the process again.
+## 开发
 
-Mapping Names:
-============
-By default, the MDK is configured to use the official mapping names from Mojang for methods and fields 
-in the Minecraft codebase. These names are covered by a specific license. All modders should be aware of this
-license. For the latest license text, refer to the mapping file itself, or the reference copy here:
-https://github.com/NeoForged/NeoForm/blob/main/Mojang.md
+- NeoForge 1.21.1 / Java 21 / Gradle
+- `gradlew build` 打包
+- 加牌:`tools/add_card.ps1`;加武将:`tools/add_hero.ps1`
 
-Additional Resources: 
-==========
-Community Documentation: https://docs.neoforged.net/  
-NeoForged Discord: https://discord.neoforged.net/
+---
+
+# 免责声明 (Disclaimer)
+
+本模组为《三国杀》粉丝自制作品,仅供个人学习与**非商业**交流使用。
+
+1. **Minecraft**:本模组不是 Mojang AB / Microsoft 官方制作、认可或支持的作品,
+   与 Mojang AB 无任何隶属关系。Minecraft 名称、商标及相关资产归 Mojang AB 所有,
+   请遵守 [Minecraft 使用准则](https://www.minecraft.net/usage-guidelines)。
+
+2. **NeoForge**:本模组基于 NeoForge 构建,NeoForge 采用 LGPL-2.1 协议,
+   完整许可证见 <https://github.com/neoforged/NeoForge>。
+
+3. **三国杀 IP**:《三国杀》游戏名称、玩法规则、武将人物设定、技能文案及相关元素
+   版权归杭州游卡网络技术有限公司(游卡桌游)所有。本模组与游卡桌游无任何隶属或
+   合作关系,不用于任何商业用途。
+
+4. **素材版权**:模组内卡面图片、武将立绘、音效等素材版权归各自原作者/版权方所有,
+   来源包括:实体卡牌拍摄、开源项目 QSanguosha 资源(项目本体遵循 GPL-3.0,
+   卡面美术版权归原画师/版权方)、网友分享素材。本模组不对素材的原始版权做任何主张。
+
+5. **禁止**:禁止任何形式的商业转售、整合包收费牟利、素材二次分发或提取商用。
+
+6. **移除请求**:若您是本模组所用素材的版权方且不希望被使用,请联系作者,
+   作者将在核实后立即移除相关内容。
+
+## 许可 (License)
+
+- 模组代码:`All Rights Reserved`(保留所有权利),禁止未经授权的代码复用
+- 模组所用第三方素材:版权归各自版权方所有,详见上方免责声明
+
+## 联系
+
+- 反馈问题 / 版权请求:通过 B站联系
