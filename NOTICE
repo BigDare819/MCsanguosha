@@ -1,0 +1,30 @@
+Sanguosha Mod (三国杀模组)
+Copyright (C) 2026 BigDare819
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+--------------------------------------------------------------------
+
+Third-party assets (NOT covered by the GPL-3.0 license):
+
+- Card face images, hero portraits, and sound effects are the property
+  of their respective copyright holders (Yoka Games, original artists,
+  QSanguosha project contributors, and community sharers).
+- These assets are included for non-commercial fan-use only.
+  Redistribution or commercial use of the assets is prohibited.
+- Sources include: physical card photography, QSanguosha project
+  resources (GPL-3.0), and community-shared materials.
+- Removal requests from copyright holders will be honored promptly.
+
+See README.md for the full disclaimer (Chinese).
