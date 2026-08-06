@@ -116,6 +116,14 @@ public final class ClientHudText {
     }
 
     public static void show(ServerLevel level, Vec3 pos, Component text) {
+        // 最多只共存一个临时文字:先清掉所有正在显示的旧文字,再创建新的
+        java.util.Iterator<Map.Entry<Display, Long>> it = STANDS.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry<Display, Long> en = it.next();
+            Display d = en.getKey();
+            if (d != null && !d.isRemoved()) d.discard();
+            it.remove();
+        }
         HudTextDisplay s = new HudTextDisplay(EntityType.TEXT_DISPLAY, level);
         s.setPos(pos.x, pos.y, pos.z);              // 文字中心落在目标坐标
         CompoundTag tag = new CompoundTag();

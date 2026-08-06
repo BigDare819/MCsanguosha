@@ -33,8 +33,11 @@ public final class ModItems {
                 }
             });
 
-    /** 将盒方块物品(右键放置为方块) */
+    /** 牌布方块物品(右键放置为方块) */
     public static final DeferredItem<Item> CARD_MAT = ITEMS.register("card_mat", com.sanguosha.block.ModBlocks.itemFor(com.sanguosha.block.ModBlocks.CARD_MAT));
+
+    /** 弃牌布方块物品(右键放置为方块,牌放上去自动清除并累计记录) */
+    public static final DeferredItem<Item> DISCARD_MAT = ITEMS.register("discard_mat", com.sanguosha.block.ModBlocks.itemFor(com.sanguosha.block.ModBlocks.DISCARD_MAT));
 
     public static final DeferredItem<Item> HERO_DECK_BOX = ITEMS.register("hero_deck_box",
             () -> new net.minecraft.world.item.BlockItem(com.sanguosha.block.ModBlocks.HERO_DECK_BOX.get(), new Item.Properties()) {
@@ -61,6 +64,7 @@ public final class ModItems {
                 output.accept(new ItemStack(com.sanguosha.block.ModBlocks.DECK_BOX.get().asItem()));
                 output.accept(new ItemStack(com.sanguosha.block.ModBlocks.HERO_DECK_BOX.get().asItem()));
                 output.accept(new ItemStack(CARD_MAT.get()));
+                output.accept(new ItemStack(DISCARD_MAT.get()));
             })
             .build());
 }

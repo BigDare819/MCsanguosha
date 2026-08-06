@@ -87,7 +87,6 @@ public final class ClientGameState {
 
     public static void update(String json) {
         try {
-            com.sanguosha.SanguoshaMod.LOGGER.info("[UPD] update called, jsonLen={}", json == null ? -1 : json.length());
             JsonObject root = GSON.fromJson(json, JsonObject.class);
             state = str(root, "state");
             phase = str(root, "phase");
@@ -126,7 +125,6 @@ public final class ClientGameState {
                 HP_MAP.put(ho.get("name").getAsString(), ho.get("hp").getAsInt());
                 if (ho.has("handCount")) HAND_MAP.put(ho.get("name").getAsString(), ho.get("handCount").getAsInt());
             }
-            com.sanguosha.SanguoshaMod.LOGGER.info("[HP] client hpList updated: {}", HP_MAP);
         }
             if (pa != null) {
                 for (JsonElement e : pa) {

@@ -30,6 +30,7 @@ public final class CardPlaceEvents {
                     if (p.getInventory().add(s)) {
                         disp.discard();
                         p.displayClientMessage(Component.literal("\u5df2\u62fe\u8d77"), true);
+                        com.sanguosha.network.ServerPayloadHandler.syncHpList(((net.minecraft.server.level.ServerLevel) disp.level()).getServer());
                     }
                 }
             } else {
@@ -53,6 +54,7 @@ public final class CardPlaceEvents {
                         int color = c.suit.color == 1 ? 0xFFE04040 : 0xFF303030;
                         net.minecraft.network.chat.Style st = net.minecraft.network.chat.Style.EMPTY.withColor(color).withBold(true);
                         disp.showNameTemporarily(Component.literal(c.suit.symbol + " " + c.rankText()).withStyle(st));
+                        com.sanguosha.network.ServerPayloadHandler.syncHpList(((net.minecraft.server.level.ServerLevel) disp.level()).getServer());
                     }
                 } else if ("\u5c06\u76d2:".equals(info)) {
                     // 发武将牌:直接进背包(点一下一张)
@@ -65,6 +67,7 @@ public final class CardPlaceEvents {
                     heroCard.set(DataComponents.CUSTOM_MODEL_DATA, new net.minecraft.world.item.component.CustomModelData(CardModelIds.heroIdOf(h.id)));
                     if (p.getInventory().add(heroCard)) {
                         p.displayClientMessage(Component.literal("\u53d1\u5c06: " + h.name + " (\u5269 " + com.sanguosha.item.HeroDeckBox.remaining() + " \u5f20)"), true);
+                        com.sanguosha.network.ServerPayloadHandler.syncHpList(((net.minecraft.server.level.ServerLevel) disp.level()).getServer());
                     } else {
                         p.displayClientMessage(Component.literal("\u80cc\u5305\u5df2\u6ee1,\u65e0\u6cd5\u53d1\u5c06!"), true);
                     }

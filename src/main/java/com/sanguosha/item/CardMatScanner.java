@@ -84,6 +84,8 @@ public final class CardMatScanner {
                 c.getX() + RANGE, c.getY() + 8, c.getZ() + RANGE);
         for (net.minecraft.world.entity.Display.TextDisplay e : level.getEntitiesOfClass(net.minecraft.world.entity.Display.TextDisplay.class, area)) {
             if (e.isRemoved()) continue;
+            // 弃牌布记录文字(§§sgsdiscard:):归 DiscardMatScanner 管理,跳过
+            if (DiscardMatScanner.isDiscardMatText(e)) continue;
             BlockPos ms = ClientHudText.parseMarker(e);
             if (ms != null) {
                 if (!isMatComplete(level, ms)) {
@@ -109,12 +111,13 @@ public final class CardMatScanner {
         }
     }
 
-    /** 检查某列坐标下方 1~4 格内是否有牌布或牌盒方块(两者都是统计文字/临时文字的锚点) */
+    /** 检查某列坐标下方 1~4 格内是否有牌布/弃牌布/牌盒方块(统计文字/弃牌记录文字/临时文字的锚点) */
     private static boolean hasAnchorBelow(ServerLevel level, BlockPos at) {
         for (int dy = 1; dy <= 4; dy++) {
             var b = level.getBlockState(at.below(dy)).getBlock();
             if (b == ModBlocks.CARD_MAT.get() || b == com.sanguosha.block.ModBlocks.DECK_BOX.get()
-                    || b == com.sanguosha.block.ModBlocks.HERO_DECK_BOX.get()) return true;
+                    || b == com.sanguosha.block.ModBlocks.HERO_DECK_BOX.get()
+                    || b == com.sanguosha.block.ModBlocks.DISCARD_MAT.get()) return true;
         }
         return false;
     }
@@ -200,6 +203,9 @@ public final class CardMatScanner {
             } else {
                 // 普通牌:"牌名|花色|点数",显示牌名
                 name = parts.length > 0 ? parts[0] : info;
+                // 坐骑/武器名后追加距离(如 "赤兔(距离-1)"),便于看攻击范围
+                String dist = com.sanguosha.card.Cards.distanceText(name);
+                if (!dist.isEmpty()) name = name + "(" + dist + ")";
             }
             counts.merge(name, 1, Integer::sum);
         }
@@ -230,6 +236,8 @@ public final class CardMatScanner {
         AABB clear = new AABB(pos.x - 3, pos.y - 3, pos.z - 3, pos.x + 3, pos.y + 3, pos.z + 3);
         for (net.minecraft.world.entity.Display.TextDisplay e : level.getEntitiesOfClass(net.minecraft.world.entity.Display.TextDisplay.class, clear)) {
             if (e.isRemoved()) continue;
+            // 弃牌布记录文字(§§sgsdiscard:):归 DiscardMatScanner 管理,跳过
+            if (DiscardMatScanner.isDiscardMatText(e)) continue;
             BlockPos ms = ClientHudText.parseMarker(e);
             if (ms != null && ms.equals(start)) {
                 e.discard();
@@ -269,6 +277,8 @@ public final class CardMatScanner {
                     start.getX() + 7, start.getY() + 6, start.getZ() + 6);
             for (net.minecraft.world.entity.Display.TextDisplay e : level.getEntitiesOfClass(net.minecraft.world.entity.Display.TextDisplay.class, clear)) {
                 if (e.isRemoved()) continue;
+                // 弃牌布记录文字(§§sgsdiscard:):归 DiscardMatScanner 管理,跳过
+                if (DiscardMatScanner.isDiscardMatText(e)) continue;
                 BlockPos ms = ClientHudText.parseMarker(e);
                 if (ms != null && ms.equals(start)) {
                     e.discard();

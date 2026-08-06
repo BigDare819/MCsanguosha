@@ -47,6 +47,8 @@ public record ActionPacket(String action, int cardIndex, int targetSeat, boolean
     public static final String REMAIN_SHUFFLE = "remain_shuffle";
     public static final String GUANXING_VIEW = "guanxing_view";
     public static final String GUANXING_CONFIRM = "guanxing_confirm";
+    public static final String DISCARD_VIEW = "discard_view";
+    public static final String DISCARD_TAKE = "discard_take";
 
     public static ActionPacket of(String action) { return new ActionPacket(action, -1, -1, false, ""); }
     public static ActionPacket of(String action, int cardIndex) { return new ActionPacket(action, cardIndex, -1, false, ""); }

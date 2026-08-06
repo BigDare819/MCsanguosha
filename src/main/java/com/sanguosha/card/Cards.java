@@ -163,4 +163,23 @@ public final class Cards {
 
     public static List<CardDefinition> all() { return List.copyOf(ALL); }
     public static int count() { return ALL.size(); }
+
+    /**
+     * 装备距离标注:武器返回攻击范围("距离N"),坐骑返回("距离+1"/"距离-1"),其他返回 ""。
+     * 供牌布统计文字在坐骑/武器名后追加距离显示。
+     */
+    public static String distanceText(String cardName) {
+        return switch (cardName) {
+            // 武器:攻击范围
+            case "诸葛连弩" -> "距离1";
+            case "青釭剑", "雌雄双股剑", "古锭刀" -> "距离2";
+            case "青龙偃月刀", "丈八蛇矛", "贯石斧" -> "距离3";
+            case "方天画戟", "朱雀羽扇" -> "距离4";
+            case "麒麟弓" -> "距离5";
+            // 坐骑:防御马 +1,进攻马 -1
+            case "的卢", "绝影", "爪黄飞电", "骅骝" -> "距离+1";
+            case "赤兔", "大宛", "紫骍", "惊帆" -> "距离-1";
+            default -> "";
+        };
+    }
 }

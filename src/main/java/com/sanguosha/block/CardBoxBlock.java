@@ -91,6 +91,8 @@ public class CardBoxBlock extends Block {
                     int color = c.suit.color == 1 ? 0xFFE04040 : 0xFF303030;
                     com.sanguosha.client.ClientHudText.show(sl, top, Component.literal(c.suit.symbol + " " + c.rankText()).withStyle(s -> s.withColor(color).withBold(true)));
                     player.displayClientMessage(Component.literal(c.suit.symbol + " " + c.rankText()).withStyle(s -> s.withColor(color).withBold(true)), true);
+                    // 摸牌后同步手牌数(名字旁显示),否则 HAND_MAP 不更新
+                    com.sanguosha.network.ServerPayloadHandler.syncHpList(sl.getServer());
                 } else {
                     player.displayClientMessage(Component.literal("背包已满,无法摸牌!"), true);
                 }

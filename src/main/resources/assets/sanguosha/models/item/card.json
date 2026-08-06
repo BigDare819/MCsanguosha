@@ -75,7 +75,13 @@
     { "predicate": { "custom_model_data": 71 }, "model": "sanguosha:item/card/71" },
     { "predicate": { "custom_model_data": 72 }, "model": "sanguosha:item/card/72" },
     { "predicate": { "custom_model_data": 73 }, "model": "sanguosha:item/card/73" },
-        { "predicate": { "custom_model_data": 74 }, "model": "sanguosha:item/card/74" }
+        { "predicate": { "custom_model_data": 74 }, "model": "sanguosha:item/card/74" },
+        { "predicate": { "custom_model_data": 75 }, "model": "sanguosha:item/card/75" },
+        { "predicate": { "custom_model_data": 76 }, "model": "sanguosha:item/card/76" },
+        { "predicate": { "custom_model_data": 77 }, "model": "sanguosha:item/card/77" },
+        { "predicate": { "custom_model_data": 78 }, "model": "sanguosha:item/card/78" },
+        { "predicate": { "custom_model_data": 79 }, "model": "sanguosha:item/card/79" },
+        { "predicate": { "custom_model_data": 80 }, "model": "sanguosha:item/card/80" }
   ]
 
 }

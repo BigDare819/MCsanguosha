@@ -25,6 +25,9 @@ public final class ModBlocks {
     public static final DeferredBlock<Block> CARD_MAT = BLOCKS.register("card_mat",
             () -> new CardMatBlock(BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_BROWN).strength(0.8F).noOcclusion()));
 
+    public static final DeferredBlock<Block> DISCARD_MAT = BLOCKS.register("discard_mat",
+            () -> new DiscardMatBlock(BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_GRAY).strength(0.8F).noOcclusion()));
+
     /** 方块对应的物品(可在物品栏持有并放置) */
     public static Supplier<Item> itemFor(DeferredBlock<Block> block) {
         return () -> new BlockItem(block.get(), new Item.Properties());

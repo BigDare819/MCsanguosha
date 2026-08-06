@@ -59,6 +59,8 @@ public final class ServerPayloadHandler {
             case ActionPacket.REMAIN_SHUFFLE -> remainShuffle(player, packet.heroId());
             case ActionPacket.GUANXING_VIEW -> guanXingView(player, packet.heroId());
             case ActionPacket.GUANXING_CONFIRM -> guanXingConfirm(player, packet.heroId());
+            case ActionPacket.DISCARD_VIEW -> discardView(player, packet.heroId());
+            case ActionPacket.DISCARD_TAKE -> discardTake(player, packet.heroId(), packet.cardIndex());
             case ActionPacket.HP_DOWN -> {
                 int hpD = com.sanguosha.game.PlayerHp.adjust(player.getUUID(), -1);
                 com.sanguosha.SanguoshaMod.LOGGER.info("[HP] server adjust down -> {}", hpD);
@@ -200,6 +202,7 @@ public final class ServerPayloadHandler {
             heroCard.set(net.minecraft.core.component.DataComponents.CUSTOM_MODEL_DATA, new net.minecraft.world.item.component.CustomModelData(com.sanguosha.item.CardModelIds.heroIdOf(h.id)));
             if (player.getInventory().add(heroCard)) {
                 player.displayClientMessage(net.minecraft.network.chat.Component.literal("\u62ff\u53d6\u6b66\u5c06: " + h.name), true);
+                syncHpList(player.server);
             } else {
                 player.displayClientMessage(net.minecraft.network.chat.Component.literal("\u80cc\u5305\u5df2\u6ee1"), true);
             }
@@ -213,6 +216,7 @@ public final class ServerPayloadHandler {
             card.set(net.minecraft.core.component.DataComponents.CUSTOM_MODEL_DATA, new net.minecraft.world.item.component.CustomModelData(com.sanguosha.item.CardModelIds.idOf(c.name)));
             if (player.getInventory().add(card)) {
                 player.displayClientMessage(net.minecraft.network.chat.Component.literal("\u62ff\u53d6: " + c.name), true);
+                syncHpList(player.server);
             } else {
                 player.displayClientMessage(net.minecraft.network.chat.Component.literal("\u80cc\u5305\u5df2\u6ee1"), true);
             }
@@ -255,6 +259,51 @@ public final class ServerPayloadHandler {
             }
         }
         PacketDistributor.sendToPlayer(player, new RemainSyncPacket(pos.getX(), pos.getY(), pos.getZ(), type, names));
+    }
+
+    /** 发送弃牌布记录列表给玩家(打开/刷新弃牌 UI);编码 "x,y,z,discard";显示名 = 牌名 */
+    public static void discardView(ServerPlayer player, String enc) {
+        net.minecraft.core.BlockPos pos = parsePos(enc);
+        if (pos == null) return;
+        java.util.List<String> names = new java.util.ArrayList<>();
+        for (String info : com.sanguosha.item.DiscardDeckManager.list(pos)) {
+            String[] parts = info.split("\\|");
+            names.add(parts.length > 0 ? parts[0] : info);
+        }
+        PacketDistributor.sendToPlayer(player, new RemainSyncPacket(pos.getX(), pos.getY(), pos.getZ(), "discard", names));
+    }
+
+    /** 从弃牌布拿取一条记录:移除记录并生成卡牌物品加入玩家背包;编码 "x,y,z,discard",cardIndex=记录索引 */
+    private static void discardTake(ServerPlayer player, String enc, int index) {
+        net.minecraft.core.BlockPos pos = parsePos(enc);
+        if (pos == null) return;
+        String info = com.sanguosha.item.DiscardDeckManager.take(pos, index);
+        if (info == null) return;
+        String[] parts = info.split("\\|");
+        String name = parts.length > 0 ? parts[0] : info;
+        // 生成卡牌物品进背包(与 remainTake 同格式:普通牌 / 武将牌)
+        net.minecraft.world.item.ItemStack card = new net.minecraft.world.item.ItemStack(com.sanguosha.item.ModItems.CARD.get());
+        card.set(com.sanguosha.item.CardData.CARD_INFO, info);
+        if (info.startsWith("武将:")) {
+            // 武将牌:武将:id|名字
+            String heroId = parts[0].substring("武将:".length());
+            card.set(net.minecraft.core.component.DataComponents.ITEM_NAME, net.minecraft.network.chat.Component.literal("【" + name + "】"));
+            card.set(net.minecraft.core.component.DataComponents.CUSTOM_MODEL_DATA, new net.minecraft.world.item.component.CustomModelData(com.sanguosha.item.CardModelIds.heroIdOf(heroId)));
+        } else {
+            // 普通牌:牌名|花色|点数
+            card.set(net.minecraft.core.component.DataComponents.ITEM_NAME, net.minecraft.network.chat.Component.literal("【" + name + "】"));
+            card.set(net.minecraft.core.component.DataComponents.CUSTOM_MODEL_DATA, new net.minecraft.world.item.component.CustomModelData(com.sanguosha.item.CardModelIds.idOf(name)));
+        }
+        if (player.getInventory().add(card)) {
+            player.displayClientMessage(net.minecraft.network.chat.Component.literal("拿回弃牌: " + name), true);
+        } else {
+            // 背包满:放回记录
+            com.sanguosha.item.DiscardDeckManager.add(pos, info);
+            player.displayClientMessage(net.minecraft.network.chat.Component.literal("背包已满,拿回失败"), true);
+        }
+        // 刷新记录 UI + 浮空文本
+        discardView(player, enc);
+        com.sanguosha.item.DiscardMatScanner.refreshDisplay(player.serverLevel(), pos);
     }
 
     /** 观星:发送牌堆顶 n 张(诸葛亮观星,线下模式);编码 "x,y,z,deck|n",默认 5 */

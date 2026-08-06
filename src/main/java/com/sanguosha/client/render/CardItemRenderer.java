@@ -20,7 +20,6 @@ import org.joml.Quaternionf;
 
 /** 手持卡牌渲染:entityTranslucent + 直接贴图(与地面实体完全相同的已验证代码) */
 public class CardItemRenderer extends BlockEntityWithoutLevelRenderer {
-    private static boolean debugLogged = false;
 
     public CardItemRenderer(BlockEntityRenderDispatcher dispatcher, EntityModelSet models) {
         super(dispatcher, models);
@@ -42,11 +41,6 @@ public class CardItemRenderer extends BlockEntityWithoutLevelRenderer {
             tex = ResourceLocation.fromNamespaceAndPath("sanguosha", "textures/card/" + key + ".png");
         }
         Minecraft.getInstance().getTextureManager().getTexture(tex); // 预加载
-        if (!debugLogged) {
-            debugLogged = true;
-            com.sanguosha.SanguoshaMod.LOGGER.info("[BER] renderByItem called ctx={} key={} tex={} hasTex={}", ctx, key, tex,
-                    Minecraft.getInstance().getResourceManager().getResource(tex).isPresent());
-        }
         float hw, hh;
         pose.pushPose();
         if (ctx == ItemDisplayContext.GUI) {

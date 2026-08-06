@@ -10,8 +10,10 @@
   "block.sanguosha.deck_box_block": "牌盒",
   "block.sanguosha.hero_deck_box_block": "将盒",
   "block.sanguosha.card_mat": "牌布",
+  "block.sanguosha.discard_mat": "弃牌布",
   "item.sanguosha.card": "三国杀卡牌",
   "item.sanguosha.deck_box": "牌盒",
   "item.sanguosha.hero_deck_box": "将盒",
-  "item.sanguosha.card_mat": "牌布"
+  "item.sanguosha.card_mat": "牌布",
+  "item.sanguosha.discard_mat": "弃牌布"
 }

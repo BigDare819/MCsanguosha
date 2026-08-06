@@ -54,8 +54,9 @@ public final class SanguoshaHud {
             }
         } else if (ModKeybinds.DROP_CARD.isDown() && ClientGameState.showOverlay && ClientGameState.selectedHand >= 0) {
             PacketDistributor.sendToServer(new ActionPacket(ActionPacket.DROP_CARD, ClientGameState.selectedHand, 0, false, ""));
-        } else if (ModKeybinds.CLEAR_CARDS.isDown()) {
-            PacketDistributor.sendToServer(new ActionPacket(ActionPacket.CLEAR_CARDS, 0, 0, false, ""));
+        } else if (ModKeybinds.CLEAR_CARDS.isDown() && mc.screen == null) {
+            // V 键:弹确认界面防误触,确认后才发清除请求
+            mc.setScreen(new com.sanguosha.client.screen.ClearConfirmScreen());
         }
     }
 
@@ -97,6 +98,9 @@ public final class SanguoshaHud {
             KeyMapping km = mc.options.keyHotbarSlots[i];
             if (km.isDown()) km.consumeClick();
         }
+        // HUD 模式下禁用原版 Q 键丢物品(丢出选中牌由 ModKeybinds.DROP_CARD 处理,不受影响)
+        KeyMapping drop = mc.options.keyDrop;
+        if (drop.isDown()) drop.consumeClick();
     }
 
     private static String handInfoAt(Minecraft mc, int index) {
@@ -127,8 +131,6 @@ public final class SanguoshaHud {
         return n;
     }
 
-    private static boolean hudLogged = false;
-
     /** 取 KeyMapping 当前绑定的键名(玩家改绑后自动跟随;未绑定时提示"未绑定") */
     private static String keyName(KeyMapping km) {
         InputConstants.Key k = km.getKey();
@@ -137,7 +139,6 @@ public final class SanguoshaHud {
     }
 
     private static float lastPartial = -1.0F;
-    private static boolean hpLogged = false;
 
     /** 任意层 Post 渲染 UI(帧标志保证每帧只画一次;hotbar 被取消所以不用它的 Post) */
     @SubscribeEvent
@@ -150,18 +151,10 @@ public final class SanguoshaHud {
     }
 
     private static void renderOverlay(GuiGraphics g) {
-        if (!hudLogged) {
-            hudLogged = true;
-            com.sanguosha.SanguoshaMod.LOGGER.info("[UI] renderOverlay firing");
-        }
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
         int w = g.guiWidth(), h = g.guiHeight();
         // 右上角血量
-        if (!hpLogged) {
-            hpLogged = true;
-            com.sanguosha.SanguoshaMod.LOGGER.info("[UI] renderOverlay name={} HP_MAP={}", mc.player.getName().getString(), ClientGameState.HP_MAP);
-        }
         // 左侧按键提示(键名从 KeyMapping 动态读取,跟随玩家改绑)
         String[] tips = {
             keyName(ModKeybinds.HP_UP) + "/" + keyName(ModKeybinds.HP_DOWN) + ": 血量±1",

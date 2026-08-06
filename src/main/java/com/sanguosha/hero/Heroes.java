@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 27 名武将:标准版 25 将 + 袁术、华雄。
- * 技能实现逐步完善,此处登记技能名称。
+ * 武将登记:标准版 25 将 + 扩展(袁术、华雄)+ 自定义(奶龙、张雪峰、界徐盛、
+ * 神曹操、神赵云、李典、吕岱、留赞、龙羽飞)。技能实现逐步完善,此处登记技能名称。
  */
 public final class Heroes {
     private static final List<HeroDefinition> ALL = new ArrayList<>();
@@ -30,6 +30,12 @@ public final class Heroes {
             case "袁术" -> "yuanshu"; case "华雄" -> "huaxiong";
             case "\u5976\u9f99" -> "nailong"; case "\u5f20\u96ea\u5cf0" -> "zhangxuefeng";
             case "\u754c\u5f90\u76db" -> "jiexusheng";
+            case "\u795e\u66f9\u64cd" -> "shencaocao";
+            case "\u795e\u8d75\u4e91" -> "shenzhaoyun";
+            case "\u674e\u5178" -> "lidian";
+            case "\u5415\u5cb1" -> "lvdai";
+            case "\u7559\u8d5e" -> "liuzan";
+            case "\u9f99\u7fbd\u98de" -> "longyufei";
             default -> name;
         };
     }
@@ -71,6 +77,12 @@ public final class Heroes {
         add("\u5976\u9f99", Faction.SHEN, 4, "juhua", "zhenglong");
         add("\u5f20\u96ea\u5cf0", Faction.LAO, 5, "qiaolezi", "zuichunfazi", "lajinmiwu");
         add("\u754c\u5f90\u76db", Faction.WU, 4);
+        add("\u795e\u66f9\u64cd", Faction.SHEN, 3);
+        add("\u795e\u8d75\u4e91", Faction.SHEN, 2);
+        add("\u674e\u5178", Faction.WEI, 3);
+        add("\u5415\u5cb1", Faction.WU, 4);
+        add("\u7559\u8d5e", Faction.WU, 4);
+        add("\u9f99\u7fbd\u98de", Faction.SHU, 3);
     }
 
     public static List<HeroDefinition> all() { return List.copyOf(ALL); }
