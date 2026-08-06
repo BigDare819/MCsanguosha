@@ -17,6 +17,11 @@ public final class Heroes {
     }
 
     public static String nameToId(String name) {
+        // 界(界限突破)武将规则: 去"界"查基础武将 id 再前缀 jie。如 界曹操 -> jie+caocao
+        if (name.startsWith("界") && name.length() > 1) {
+            String base = nameToId(name.substring(1));
+            if (base.matches("[a-z]+")) return "jie" + base;
+        }
         return switch (name) {
             case "曹操" -> "caocao";
             case "司马懿" -> "simayi"; case "夏侯惇" -> "xiahoudun"; case "张辽" -> "zhangliao";
@@ -83,6 +88,31 @@ public final class Heroes {
         add("\u5415\u5cb1", Faction.WU, 4);
         add("\u7559\u8d5e", Faction.WU, 4);
         add("\u9f99\u7fbd\u98de", Faction.SHU, 3);
+        add("\u754c\u534e\u4f57", Faction.QUN, 4);
+        add("\u754c\u66f9\u64cd", Faction.QUN, 4);
+        add("\u754c\u5927\u4e54", Faction.QUN, 4);
+        add("\u754c\u8c82\u8749", Faction.QUN, 4);
+        add("\u754c\u5173\u7fbd", Faction.QUN, 4);
+        add("\u754c\u90ed\u5609", Faction.QUN, 4);
+        add("\u754c\u534e\u96c4", Faction.QUN, 4);
+        add("\u754c\u9ec4\u76d6", Faction.QUN, 4);
+        add("\u754c\u9ec4\u6708\u82f1", Faction.QUN, 4);
+        add("\u754c\u5218\u5907", Faction.QUN, 4);
+        add("\u754c\u9646\u900a", Faction.QUN, 4);
+        add("\u754c\u5415\u5e03", Faction.QUN, 4);
+        add("\u754c\u9a6c\u8d85", Faction.QUN, 4);
+        add("\u754c\u53f8\u9a6c\u61ff", Faction.QUN, 4);
+        add("\u754c\u5b59\u6743", Faction.QUN, 4);
+        add("\u754c\u5b59\u5c1a\u9999", Faction.QUN, 4);
+        add("\u754c\u590f\u4faf\u60c7", Faction.QUN, 4);
+        add("\u754c\u8bb8\u891a", Faction.QUN, 4);
+        add("\u754c\u8881\u672f", Faction.QUN, 4);
+        add("\u754c\u5f20\u98de", Faction.QUN, 4);
+        add("\u754c\u5f20\u8fbd", Faction.QUN, 4);
+        add("\u754c\u8d75\u4e91", Faction.QUN, 4);
+        add("\u754c\u7504\u59ec", Faction.QUN, 4);
+        add("\u754c\u5468\u745c", Faction.QUN, 4);
+        add("\u754c\u8bf8\u845b\u4eae", Faction.QUN, 4);
     }
 
     public static List<HeroDefinition> all() { return List.copyOf(ALL); }

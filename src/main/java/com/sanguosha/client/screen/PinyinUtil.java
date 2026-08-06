@@ -7,7 +7,6 @@ import java.util.Map;
 /** 牌名/武将名 -> 小写拼音(无调),用于剩余 UI 拼音搜索 */
 public final class PinyinUtil {
     private static final Map<String, String> CARD_PINYIN = new HashMap<>();
-    private static final Map<String, String> HERO_PINYIN = new HashMap<>();
     static {
         CARD_PINYIN.put("\u94c1\u7d22\u8fde\u73af", "tiesuolianhuan");
         CARD_PINYIN.put("\u96f7\u6740", "leisha");
@@ -52,35 +51,6 @@ public final class PinyinUtil {
         CARD_PINYIN.put("\u9152", "jiu");
         CARD_PINYIN.put("\u4ec1\u738b\u76fe", "renwangdun");
         CARD_PINYIN.put("\u60ca\u5e06", "jingfan");
-        HERO_PINYIN.put("\u8bf8\u845b\u4eae", "zhugeliang");
-        HERO_PINYIN.put("\u8bb8\u891a", "xuchu");
-        HERO_PINYIN.put("\u534e\u4f57", "huatuo");
-        HERO_PINYIN.put("\u9ec4\u6708\u82f1", "huangyueying");
-        HERO_PINYIN.put("\u5b59\u6743", "sunquan");
-        HERO_PINYIN.put("\u5f20\u8fbd", "zhangliao");
-        HERO_PINYIN.put("\u590f\u4faf\u60c7", "xiahoudun");
-        HERO_PINYIN.put("\u5927\u4e54", "daqiao");
-        HERO_PINYIN.put("\u7504\u59ec", "zhenji");
-        HERO_PINYIN.put("\u5f20\u96ea\u5cf0", "zhangxuefeng");
-        HERO_PINYIN.put("\u5b59\u5c1a\u9999", "sunshangxiang");
-        HERO_PINYIN.put("\u66f9\u64cd", "caocao");
-        HERO_PINYIN.put("\u5173\u7fbd", "guanyu");
-        HERO_PINYIN.put("\u5f20\u98de", "zhangfei");
-        HERO_PINYIN.put("\u9646\u900a", "luxun");
-        HERO_PINYIN.put("\u5415\u8499", "lvmeng");
-        HERO_PINYIN.put("\u8d75\u4e91", "zhaoyun");
-        HERO_PINYIN.put("\u5415\u5e03", "lvbu");
-        HERO_PINYIN.put("\u5218\u5907", "liubei");
-        HERO_PINYIN.put("\u8c82\u8749", "diaochan");
-        HERO_PINYIN.put("\u9a6c\u8d85", "machao");
-        HERO_PINYIN.put("\u534e\u96c4", "huaxiong");
-        HERO_PINYIN.put("\u5468\u745c", "zhouyu");
-        HERO_PINYIN.put("\u53f8\u9a6c\u61ff", "simayi");
-        HERO_PINYIN.put("\u9ec4\u76d6", "huanggai");
-        HERO_PINYIN.put("\u8881\u672f", "yuanshu");
-        HERO_PINYIN.put("\u5976\u9f99", "nailong");
-        HERO_PINYIN.put("\u7518\u5b81", "ganning");
-        HERO_PINYIN.put("\u90ed\u5609", "guojia");
     }
 
     private PinyinUtil() {}
@@ -91,7 +61,6 @@ public final class PinyinUtil {
         int sp = core.lastIndexOf(' ');
         if (sp >= 0 && sp < core.length() - 1) core = core.substring(sp + 1);
         String p = CARD_PINYIN.get(core);
-        if (p == null) p = HERO_PINYIN.get(core);
         if (p == null) p = com.sanguosha.hero.Heroes.nameToId(core);
         return p != null ? p : name.toLowerCase(Locale.ROOT);
     }
