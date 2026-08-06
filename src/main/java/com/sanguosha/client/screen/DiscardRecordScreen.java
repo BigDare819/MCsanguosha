@@ -33,6 +33,12 @@ public class DiscardRecordScreen extends Screen {
         // 顺序说明:最上面的是最后弃的牌
         g.drawCenteredString(this.font, "\u25b2 \u6700\u4e0a\u9762\u662f\u6700\u540e\u5f03\u7684\u724c", this.width / 2, 24, 0xFF88CCFF);
         g.drawCenteredString(this.font, "\u70b9\u51fb\u62ff\u56de,\u6eda\u8f6e\u6eda\u52a8,ESC \u5173\u95ed", this.width / 2, this.height - 42, 0xFFAAAAAA);
+        // 一键清空按钮(底部提示上方)
+        int btnY = this.height - 70;
+        boolean overBtn = mouseX >= this.width / 2 - 60 && mouseX <= this.width / 2 + 60
+                && mouseY >= btnY && mouseY <= btnY + 18;
+        g.fill(this.width / 2 - 60, btnY, this.width / 2 + 60, btnY + 18, overBtn ? 0xFF8A3030 : 0xFF6A2020);
+        g.drawCenteredString(this.font, "\u4e00\u952e\u6e05\u7a7a", this.width / 2, btnY + 5, 0xFFFF9090);
         if (names.isEmpty()) {
             g.drawCenteredString(this.font, "\u8fd8\u6ca1\u6709\u5f03\u724c\u8bb0\u5f55", this.width / 2, this.height / 2 - 10, 0xFF888888);
             return;
@@ -54,6 +60,13 @@ public class DiscardRecordScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        // 一键清空按钮
+        int btnY = this.height - 70;
+        if (mouseX >= this.width / 2 - 60 && mouseX <= this.width / 2 + 60
+                && mouseY >= btnY && mouseY <= btnY + 18) {
+            PacketDistributor.sendToServer(new ActionPacket(ActionPacket.DISCARD_CLEAR, -1, -1, false, boxKey()));
+            return true;
+        }
         int rowH = 20;
         int maxRows = Math.min(names.size(), (this.height - 150) / rowH);
         int start = Math.max(0, Math.min(scroll, names.size() - maxRows));

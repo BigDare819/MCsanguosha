@@ -56,6 +56,11 @@ public final class DiscardDeckManager {
         return l == null ? 0 : l.size();
     }
 
+    /** 一键清空:移除该弃牌布的全部记录 */
+    public static void clear(BlockPos pos) {
+        RECORDS.remove(pos);
+    }
+
     /** 方块被破坏时清理记录 */
     public static void remove(BlockPos pos) {
         RECORDS.remove(pos);

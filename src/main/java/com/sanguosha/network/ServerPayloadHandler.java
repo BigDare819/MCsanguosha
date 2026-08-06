@@ -61,6 +61,7 @@ public final class ServerPayloadHandler {
             case ActionPacket.GUANXING_CONFIRM -> guanXingConfirm(player, packet.heroId());
             case ActionPacket.DISCARD_VIEW -> discardView(player, packet.heroId());
             case ActionPacket.DISCARD_TAKE -> discardTake(player, packet.heroId(), packet.cardIndex());
+            case ActionPacket.DISCARD_CLEAR -> discardClear(player, packet.heroId());
             case ActionPacket.HP_DOWN -> {
                 int hpD = com.sanguosha.game.PlayerHp.adjust(player.getUUID(), -1);
                 com.sanguosha.SanguoshaMod.LOGGER.info("[HP] server adjust down -> {}", hpD);
@@ -304,6 +305,45 @@ public final class ServerPayloadHandler {
         // 刷新记录 UI + 浮空文本
         discardView(player, enc);
         com.sanguosha.item.DiscardMatScanner.refreshDisplay(player.serverLevel(), pos);
+    }
+
+    /** 一键清空弃牌区:删除 4x4 弃牌布上方残留的卡牌实体/凋落物并清空记录;编码 "x,y,z,discard" */
+    private static void discardClear(ServerPlayer player, String enc) {
+        net.minecraft.core.BlockPos pos = parsePos(enc);
+        if (pos == null) return;
+        net.minecraft.server.level.ServerLevel level = player.serverLevel();
+        net.minecraft.world.level.block.state.BlockState s0 = level.getBlockState(pos);
+        if (s0.getBlock() != com.sanguosha.block.ModBlocks.DISCARD_MAT.get()) return;
+        net.minecraft.core.Direction dir = s0.getValue(com.sanguosha.block.DiscardMatBlock.FACING);
+        net.minecraft.core.Direction right = dir.getClockWise();
+        // 4x4 区域上方 0.02 ~ 1.2 格(与 DiscardMatScanner.updateMat 同区域)
+        double bx = pos.getX() + right.getStepX() * 3.0 + dir.getStepX() * 3.0;
+        double bz = pos.getZ() + right.getStepZ() * 3.0 + dir.getStepZ() * 3.0;
+        double minX = Math.min(pos.getX(), bx);
+        double maxX = Math.max(pos.getX(), bx) + 1.0;
+        double minZ = Math.min(pos.getZ(), bz);
+        double maxZ = Math.max(pos.getZ(), bz) + 1.0;
+        net.minecraft.world.phys.AABB box = new net.minecraft.world.phys.AABB(minX, pos.getY() + 0.02, minZ, maxX, pos.getY() + 1.2, maxZ);
+        int n = 0;
+        for (com.sanguosha.entity.CardEntity e : level.getEntitiesOfClass(com.sanguosha.entity.CardEntity.class, box)) {
+            String info = e.getCardInfo();
+            if (info == null || info.isEmpty()) continue;
+            e.discard();
+            n++;
+        }
+        for (net.minecraft.world.entity.item.ItemEntity it : level.getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class, box)) {
+            net.minecraft.world.item.ItemStack st = it.getItem();
+            if (st.isEmpty() || !st.is(com.sanguosha.item.ModItems.CARD.get())) continue;
+            if (st.get(com.sanguosha.item.CardData.CARD_INFO) == null) continue;
+            it.discard();
+            n++;
+        }
+        com.sanguosha.item.DiscardDeckManager.clear(pos);
+        player.displayClientMessage(net.minecraft.network.chat.Component.literal("\u5df2\u6e05\u7a7a\u5f03\u724c\u533a " + n + " \u5f20"), true);
+        com.sanguosha.SanguoshaMod.LOGGER.info("[DISCARD] cleared {} cards at {}", n, pos);
+        // 刷新记录 UI(空列表) + 移除浮空文本
+        discardView(player, enc);
+        com.sanguosha.item.DiscardMatScanner.refreshDisplay(level, pos);
     }
 
     /** 观星:发送牌堆顶 n 张(诸葛亮观星,线下模式);编码 "x,y,z,deck|n",默认 5 */
