@@ -35,6 +35,11 @@ public final class ClientHudText {
     /** 临时漂浮文字(牌盒摸牌/发将提示)的 CustomName 标记前缀 */
     private static final String TMP_MARKER_PREFIX = "\u00a7\u00a7sgstmp:";
 
+    /** 弃牌布字幕:完全显示时长(tick,4 秒) */
+    private static final int FADE_OUT_AFTER_TICKS = 80;
+    /** 弃牌布字幕:淡出渐变时长(tick,1 秒) */
+    private static final int FADE_DURATION_TICKS = 20;
+
     /** 生成牌布统计文字标记:§§sgsmat:x,y,z */
     public static net.minecraft.network.chat.Component markerFor(BlockPos start) {
         return Component.literal(MARKER_PREFIX + start.getX() + "," + start.getY() + "," + start.getZ());
@@ -75,6 +80,12 @@ public final class ClientHudText {
     public static class HudTextDisplay extends Display.TextDisplay {
         private BlockPos matStart = null; // 所属牌布起点(null = 临时漂浮文字,不参与自检)
         private int selfCheck = 0;
+        // 弃牌布字幕生命周期:true 时显示 FADE_OUT_AFTER_TICKS 后开始淡出渐变,再 FADE_DURATION_TICKS 后销毁
+        private boolean fadeOut = false;
+        private int lifetime = 0;
+        /** 创建时的完整 NBT(1.21.1 TextDisplay 的 setTextOpacity/DATA_TEXT_OPACITY_ID 均 private,
+         *  淡出只能每 tick 重载 NBT 改 text_opacity:255→0 线性下降实现平滑渐隐) */
+        private CompoundTag baseTag = null;
 
         public HudTextDisplay(EntityType<? extends Display.TextDisplay> type, Level level) { super(type, level); }
         public void loadData(CompoundTag tag) { this.readAdditionalSaveData(tag); }
@@ -84,6 +95,12 @@ public final class ClientHudText {
 
         /** 所属牌布起点(供 CardMatScanner 扫描孤儿实体时判断) */
         public BlockPos getMatStart() { return matStart; }
+
+        /** 开启"显示后淡出销毁"生命周期(弃牌布字幕用;牌布统计文字保持常驻不开) */
+        public void setFadeOut(boolean b) { this.fadeOut = b; }
+
+        /** 记录创建时的完整 NBT(淡出渐变时基于它改 text_opacity 重载) */
+        public void setBaseTag(CompoundTag tag) { this.baseTag = tag.copy(); }
 
         @Override
         public void readAdditionalSaveData(CompoundTag tag) {
@@ -106,10 +123,26 @@ public final class ClientHudText {
         @Override
         public void tick() {
             super.tick();
-            // 牌布统计文字:每 20 tick(1s)检查所属牌布是否还在,没了就自毁(兜底清理)
-            if (matStart != null && !level().isClientSide && ++selfCheck % 20 == 0) {
-                if (!CardMatScanner.isMatComplete(level(), matStart)) {
-                    discard();
+            if (!level().isClientSide) {
+                // 牌布统计文字:每 20 tick(1s)检查所属牌布是否还在,没了就自毁(兜底清理)
+                if (matStart != null && ++selfCheck % 20 == 0) {
+                    if (!CardMatScanner.isMatComplete(level(), matStart)) {
+                        discard();
+                    }
+                }
+                // 弃牌布字幕:4 秒后 text_opacity 每 tick 线性下降(255→0,1 秒)实现逐渐淡出,完全透明后销毁
+                if (fadeOut && baseTag != null) {
+                    lifetime++;
+                    int total = FADE_OUT_AFTER_TICKS + FADE_DURATION_TICKS;
+                    if (lifetime >= total) {
+                        discard();
+                    } else if (lifetime >= FADE_OUT_AFTER_TICKS) {
+                        int remain = total - lifetime; // 20..1
+                        int op = Math.max(0, Math.round(255f * remain / FADE_DURATION_TICKS));
+                        CompoundTag t = baseTag.copy();
+                        t.putByte("text_opacity", (byte) op);
+                        loadData(t);
+                    }
                 }
             }
         }

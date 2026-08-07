@@ -262,14 +262,19 @@ public final class ServerPayloadHandler {
         PacketDistributor.sendToPlayer(player, new RemainSyncPacket(pos.getX(), pos.getY(), pos.getZ(), type, names));
     }
 
-    /** 发送弃牌布记录列表给玩家(打开/刷新弃牌 UI);编码 "x,y,z,discard";显示名 = 牌名 */
+    /** 发送弃牌布记录列表给玩家(打开/刷新弃牌 UI);编码 "x,y,z,discard";显示名 = 牌名(武将牌取汉字名) */
     public static void discardView(ServerPlayer player, String enc) {
         net.minecraft.core.BlockPos pos = parsePos(enc);
         if (pos == null) return;
         java.util.List<String> names = new java.util.ArrayList<>();
         for (String info : com.sanguosha.item.DiscardDeckManager.list(pos)) {
             String[] parts = info.split("\\|");
-            names.add(parts.length > 0 ? parts[0] : info);
+            // 武将牌("武将:id|名字")显示汉字名;普通牌显示牌名
+            if (parts.length > 1 && parts[0].startsWith("武将:")) {
+                names.add(parts[1]);
+            } else {
+                names.add(parts.length > 0 ? parts[0] : info);
+            }
         }
         PacketDistributor.sendToPlayer(player, new RemainSyncPacket(pos.getX(), pos.getY(), pos.getZ(), "discard", names));
     }
@@ -281,7 +286,10 @@ public final class ServerPayloadHandler {
         String info = com.sanguosha.item.DiscardDeckManager.take(pos, index);
         if (info == null) return;
         String[] parts = info.split("\\|");
-        String name = parts.length > 0 ? parts[0] : info;
+        // 武将牌("武将:id|名字")用汉字名;普通牌用牌名
+        String name = (parts.length > 1 && parts[0].startsWith("武将:"))
+                ? parts[1]
+                : (parts.length > 0 ? parts[0] : info);
         // 生成卡牌物品进背包(与 remainTake 同格式:普通牌 / 武将牌)
         net.minecraft.world.item.ItemStack card = new net.minecraft.world.item.ItemStack(com.sanguosha.item.ModItems.CARD.get());
         card.set(com.sanguosha.item.CardData.CARD_INFO, info);

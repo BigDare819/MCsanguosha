@@ -108,7 +108,9 @@
         { "predicate": { "custom_model_data": 102 }, "model": "sanguosha:item/card/102" },
         { "predicate": { "custom_model_data": 103 }, "model": "sanguosha:item/card/103" },
         { "predicate": { "custom_model_data": 104 }, "model": "sanguosha:item/card/104" },
-        { "predicate": { "custom_model_data": 105 }, "model": "sanguosha:item/card/105" }
+        { "predicate": { "custom_model_data": 105 }, "model": "sanguosha:item/card/105" },
+        { "predicate": { "custom_model_data": 106 }, "model": "sanguosha:item/card/106" },
+        { "predicate": { "custom_model_data": 107 }, "model": "sanguosha:item/card/107" }
 
   ]
 

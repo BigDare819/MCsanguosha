@@ -69,6 +69,9 @@ public final class DiscardMatScanner {
         for (BlockPos key : stale) {
             removeDisplay(level, key);
         }
+        // 清理已自动淡出销毁的字幕(ACTIVE 残留;LAST_TEXT 保留 → updateMat 内容没变会保持隐藏,
+        // 不会每 10 tick 自动重建;只有新弃牌/内容变化才重新显示)
+        ACTIVE.entrySet().removeIf(en -> en.getValue() == null || en.getValue().isRemoved());
         // 更新每张弃牌布的记录
         for (BlockPos start : mats) {
             updateMat(level, start);
@@ -234,6 +237,9 @@ public final class DiscardMatScanner {
         s.loadData(tag);
         s.setCustomName(markerFor(start)); // CustomName 标记(持久化,重进后也能识别清理)
         s.setCustomNameVisible(false);
+        // 弃牌布字幕:出现 4 秒后逐渐淡出并自动销毁(不挡玩家对视);新弃牌重建时重新计时
+        s.setFadeOut(true);
+        s.setBaseTag(tag);
         level.addFreshEntity(s);
         ACTIVE.put(start, s);
         LAST_TEXT.put(start, text.getString());

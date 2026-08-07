@@ -112,6 +112,8 @@ public final class Heroes {
         add("\u754c\u8d75\u4e91", Faction.QUN, 4);
         add("\u754c\u7504\u59ec", Faction.QUN, 4);
         add("\u754c\u5468\u745c", Faction.QUN, 4);
+        add("\u754c\u7518\u5b81", Faction.QUN, 4);
+        add("big", Faction.QUN, 4);
         add("\u754c\u8bf8\u845b\u4eae", Faction.QUN, 4);
     }
 

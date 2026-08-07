@@ -15,7 +15,7 @@ public final class CardModelIds {
         "caocao","daqiao","diaochan","ganning","guanyu","guojia","huanggai","huatuo",
         "huangyueying","huaxiong","liubei","lvbu","lvmeng","luxun","machao","simayi",
         "sunquan","sunshangxiang","xiahoudun","xuchu","yuanshu","zhangfei","zhangliao",
-        "zhaoyun","zhenji","zhugeliang","zhouyu","nailong","zhangxuefeng","jiexusheng","shencaocao","shenzhaoyun","lidian","lvdai","liuzan","longyufei","jiehuatuo","jiecaocao","jiedaqiao","jiediaochan","jieguanyu","jieguojia","jiehuaxiong","jiehuanggai","jiehuangyueying","jieliubei","jieluxun","jielvbu","jiemachao","jiesimayi","jiesunquan","jiesunshangxiang","jiexiahoudun","jiexuchu","jieyuanshu","jiezhangfei","jiezhangliao","jiezhaoyun","jiezhenji","jiezhouyu","jiezhugeliang"
+        "zhaoyun","zhenji","zhugeliang","zhouyu","nailong","zhangxuefeng","jiexusheng","shencaocao","shenzhaoyun","lidian","lvdai","liuzan","longyufei","jiehuatuo","jiecaocao","jiedaqiao","jiediaochan","jieguanyu","jieguojia","jiehuaxiong","jiehuanggai","jiehuangyueying","jieliubei","jieluxun","jielvbu","jiemachao","jiesimayi","jiesunquan","jiesunshangxiang","jiexiahoudun","jiexuchu","jieyuanshu","jiezhangfei","jiezhangliao","jiezhaoyun","jiezhenji","jiezhouyu","jiezhugeliang","jieganning","big"
     };
 
     private CardModelIds() {}
