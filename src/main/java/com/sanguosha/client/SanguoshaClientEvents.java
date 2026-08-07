@@ -22,10 +22,10 @@ public final class SanguoshaClientEvents {
             String name = p.getName().getString();
             int hp = ClientGameState.HP_MAP.getOrDefault(name, -1);
             if (hp > 0) {
-                // 头顶血量显示为 上限/当前(x/y):x=血量面板的血量上限,y=血量面板的当前血量
+                // 头顶血量显示为 当前/上限(x/y):x=血量面板的当前血量,y=血量面板的血量上限
                 int maxHp = ClientGameState.MAX_HP_MAP.getOrDefault(name, 4);
                 int hc = ClientGameState.HAND_MAP.getOrDefault(name, 0);
-                event.setContent(net.minecraft.network.chat.Component.literal(name + " ♥" + maxHp + "/" + hp + "  手牌" + hc));
+                event.setContent(net.minecraft.network.chat.Component.literal(name + " ♥" + hp + "/" + maxHp + "  手牌" + hc));
             }
         }
     }
