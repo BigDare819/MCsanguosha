@@ -12,10 +12,6 @@ public final class ClientModEvents {
     @net.neoforged.bus.api.SubscribeEvent
     public static void onRegisterKeyMappings(net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent event) {
         event.register(ModKeybinds.OPEN_HP_UI);
-        event.register(ModKeybinds.HP_UP);
-        event.register(ModKeybinds.HP_DOWN);
-        event.register(ModKeybinds.MAX_HP_UP);
-        event.register(ModKeybinds.MAX_HP_DOWN);
         event.register(ModKeybinds.TOGGLE_UI);
         event.register(ModKeybinds.PLACE_CARD);
         event.register(ModKeybinds.OPEN_TABLE);

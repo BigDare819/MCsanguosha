@@ -6,10 +6,6 @@ import org.lwjgl.glfw.GLFW;
 /** 实体卡牌模式快捷键(全部可在设置-按键绑定中更改) */
 public final class ModKeybinds {
     public static final KeyMapping OPEN_HP_UI = new KeyMapping("key.sanguosha.open_hp_ui", GLFW.GLFW_KEY_X, "key.categories.sanguosha");
-    public static final KeyMapping HP_UP = new KeyMapping("key.sanguosha.hp_up", GLFW.GLFW_KEY_V, "key.categories.sanguosha");
-    public static final KeyMapping HP_DOWN = new KeyMapping("key.sanguosha.hp_down", GLFW.GLFW_KEY_B, "key.categories.sanguosha");
-    public static final KeyMapping MAX_HP_UP = new KeyMapping("key.sanguosha.max_hp_up", GLFW.GLFW_KEY_F, "key.categories.sanguosha");
-    public static final KeyMapping MAX_HP_DOWN = new KeyMapping("key.sanguosha.max_hp_down", GLFW.GLFW_KEY_G, "key.categories.sanguosha");
     public static final KeyMapping TOGGLE_UI = new KeyMapping("key.sanguosha.toggle_ui", GLFW.GLFW_KEY_H, "key.categories.sanguosha");
     public static final KeyMapping PLACE_CARD = new KeyMapping("key.sanguosha.place_card", GLFW.GLFW_KEY_R, "key.categories.sanguosha");
     public static final KeyMapping OPEN_TABLE = new KeyMapping("key.sanguosha.open_table", GLFW.GLFW_KEY_O, "key.categories.sanguosha");

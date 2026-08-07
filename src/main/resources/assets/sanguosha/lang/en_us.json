@@ -1,10 +1,6 @@
 {
   "key.categories.sanguosha": "sanguosha",
   "key.sanguosha.open_hp_ui": "open hp panel",
-  "key.sanguosha.hp_up": "hp up",
-  "key.sanguosha.hp_down": "hp down",
-  "key.sanguosha.max_hp_up": "max hp up",
-  "key.sanguosha.max_hp_down": "max hp down",
   "key.sanguosha.toggle_ui": "open ui",
   "key.sanguosha.place_card": "place card",
   "key.sanguosha.open_table": "open table",
