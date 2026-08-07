@@ -19,10 +19,13 @@ public final class SanguoshaClientEvents {
     @net.neoforged.bus.api.SubscribeEvent
     public static void onNameTag(net.neoforged.neoforge.client.event.RenderNameTagEvent event) {
         if (event.getEntity() instanceof net.minecraft.world.entity.player.Player p) {
-            int hp = ClientGameState.HP_MAP.getOrDefault(p.getName().getString(), -1);
+            String name = p.getName().getString();
+            int hp = ClientGameState.HP_MAP.getOrDefault(name, -1);
             if (hp > 0) {
-                int hc = ClientGameState.HAND_MAP.getOrDefault(p.getName().getString(), 0);
-                event.setContent(net.minecraft.network.chat.Component.literal(p.getName().getString() + " ♥" + hp + "  手牌" + hc));
+                // 头顶血量显示为 上限/当前(x/y):x=血量面板的血量上限,y=血量面板的当前血量
+                int maxHp = ClientGameState.MAX_HP_MAP.getOrDefault(name, 4);
+                int hc = ClientGameState.HAND_MAP.getOrDefault(name, 0);
+                event.setContent(net.minecraft.network.chat.Component.literal(name + " ♥" + maxHp + "/" + hp + "  手牌" + hc));
             }
         }
     }
