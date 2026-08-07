@@ -72,6 +72,7 @@ public final class ClientGameState {
     public static int animFrom = -1;
     public static boolean showOverlay = false;
     public static final java.util.Map<String, Integer> HP_MAP = new java.util.HashMap<>();
+    public static final java.util.Map<String, Integer> MAX_HP_MAP = new java.util.HashMap<>();
     public static final java.util.Map<String, Integer> HAND_MAP = new java.util.HashMap<>();
     public static int selectedHand = -1;
     public static int animTo = -1;
@@ -119,10 +120,12 @@ public final class ClientGameState {
             players.clear();
             JsonArray pa = root.getAsJsonArray("players");
         HP_MAP.clear();
+        MAX_HP_MAP.clear();
         if (root.has("hpList")) {
             for (var he : root.getAsJsonArray("hpList")) {
                 var ho = he.getAsJsonObject();
                 HP_MAP.put(ho.get("name").getAsString(), ho.get("hp").getAsInt());
+                if (ho.has("maxHp")) MAX_HP_MAP.put(ho.get("name").getAsString(), ho.get("maxHp").getAsInt());
                 if (ho.has("handCount")) HAND_MAP.put(ho.get("name").getAsString(), ho.get("handCount").getAsInt());
             }
         }

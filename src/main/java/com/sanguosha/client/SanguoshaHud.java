@@ -28,16 +28,24 @@ import java.util.List;
 public final class SanguoshaHud {
     private SanguoshaHud() {}
 
-    /** 按键:J=血+1 K=血-1 H=开关 数字1-9=选牌 */
+    /** 按键:X=血量面板 V/B=血量±1 F/G=上限±1 H=开关 数字1-9=选牌(全部可改绑) */
     @SubscribeEvent
     public static void onKeyInput(InputEvent.Key event) {
         if (event.getAction() != GLFW.GLFW_PRESS) return;
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
-        if (ModKeybinds.HP_UP.isDown()) {
+        // 界面打开时由界面自身处理按键,避免双重触发
+        if (mc.screen != null) return;
+        if (ModKeybinds.OPEN_HP_UI.isDown()) {
+            mc.setScreen(new com.sanguosha.client.screen.HpUiScreen());
+        } else if (ModKeybinds.HP_UP.isDown()) {
             PacketDistributor.sendToServer(new ActionPacket(ActionPacket.HP_UP, 0, 0, false, ""));
         } else if (ModKeybinds.HP_DOWN.isDown()) {
             PacketDistributor.sendToServer(new ActionPacket(ActionPacket.HP_DOWN, 0, 0, false, ""));
+        } else if (ModKeybinds.MAX_HP_UP.isDown()) {
+            PacketDistributor.sendToServer(new ActionPacket(ActionPacket.MAX_HP_UP, 0, 0, false, ""));
+        } else if (ModKeybinds.MAX_HP_DOWN.isDown()) {
+            PacketDistributor.sendToServer(new ActionPacket(ActionPacket.MAX_HP_DOWN, 0, 0, false, ""));
         } else if (ModKeybinds.TOGGLE_UI.isDown()) {
             ClientGameState.showOverlay = !ClientGameState.showOverlay;
             com.sanguosha.SanguoshaMod.LOGGER.info("[UI] H toggled -> {}", ClientGameState.showOverlay);
@@ -154,10 +162,11 @@ public final class SanguoshaHud {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
         int w = g.guiWidth(), h = g.guiHeight();
-        // 右上角血量
         // 左侧按键提示(键名从 KeyMapping 动态读取,跟随玩家改绑)
         String[] tips = {
+            keyName(ModKeybinds.OPEN_HP_UI) + ": 血量面板",
             keyName(ModKeybinds.HP_UP) + "/" + keyName(ModKeybinds.HP_DOWN) + ": 血量±1",
+            keyName(ModKeybinds.MAX_HP_UP) + "/" + keyName(ModKeybinds.MAX_HP_DOWN) + ": 上限±1",
             keyName(ModKeybinds.PLACE_CARD) + ": 放置选中牌",
             keyName(ModKeybinds.DROP_CARD) + ": 丢出选中牌",
             "1-9/滚轮: 选牌",
@@ -170,11 +179,6 @@ public final class SanguoshaHud {
             g.drawString(mc.font, tip, 7, ty, 0xFFFFFFFF);
             ty += 11;
         }
-        int myHp = ClientGameState.HP_MAP.getOrDefault(mc.player.getName().getString(), 4);
-        String hpText = "♥ 血量: " + myHp;
-        int tw = mc.font.width(hpText);
-        g.fill(w - tw - 26, 8, w - 8, 26, 0xAA000000);
-        g.drawString(mc.font, hpText, w - tw - 18, 12, 0xFFE8C15A);
         // 底部手牌(炉石式弧形,中间高两侧低)
         List<ItemStack> hand = new ArrayList<>();
         for (ItemStack s : mc.player.getInventory().items) {

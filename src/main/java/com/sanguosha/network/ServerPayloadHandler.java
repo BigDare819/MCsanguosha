@@ -51,6 +51,12 @@ public final class ServerPayloadHandler {
                 player.displayClientMessage(net.minecraft.network.chat.Component.literal("♥ 血量: " + hpU), true);
                 syncAll(game, player.server);
             }
+            case ActionPacket.MAX_HP_UP -> {
+                int maxU = com.sanguosha.game.PlayerHp.adjustMax(player.getUUID(), 1);
+                com.sanguosha.SanguoshaMod.LOGGER.info("[HP] server adjust max up -> {}", maxU);
+                player.displayClientMessage(net.minecraft.network.chat.Component.literal("♠ 血量上限: " + maxU), true);
+                syncAll(game, player.server);
+            }
             case ActionPacket.PLACE_CARD -> placeSelectedCard(player, packet.cardIndex());
             case ActionPacket.DROP_CARD -> dropSelectedCard(player, packet.cardIndex());
             case ActionPacket.DEMOLISH -> demolishCard(player, packet.heroId(), packet.cardIndex(), packet.responded());
@@ -66,6 +72,12 @@ public final class ServerPayloadHandler {
                 int hpD = com.sanguosha.game.PlayerHp.adjust(player.getUUID(), -1);
                 com.sanguosha.SanguoshaMod.LOGGER.info("[HP] server adjust down -> {}", hpD);
                 player.displayClientMessage(net.minecraft.network.chat.Component.literal("♥ 血量: " + hpD), true);
+                syncAll(game, player.server);
+            }
+            case ActionPacket.MAX_HP_DOWN -> {
+                int maxD = com.sanguosha.game.PlayerHp.adjustMax(player.getUUID(), -1);
+                com.sanguosha.SanguoshaMod.LOGGER.info("[HP] server adjust max down -> {}", maxD);
+                player.displayClientMessage(net.minecraft.network.chat.Component.literal("♠ 血量上限: " + maxD), true);
                 syncAll(game, player.server);
             }
                 default -> {}
@@ -402,6 +414,7 @@ public final class ServerPayloadHandler {
             com.google.gson.JsonObject m2 = new com.google.gson.JsonObject();
             m2.addProperty("name", p2.getName().getString());
             m2.addProperty("hp", com.sanguosha.game.PlayerHp.get(p2.getUUID()));
+            m2.addProperty("maxHp", com.sanguosha.game.PlayerHp.getMax(p2.getUUID()));
             int hc = 0;
             for (net.minecraft.world.item.ItemStack is : p2.getInventory().items) {
                 if (!is.isEmpty() && is.is(com.sanguosha.item.ModItems.CARD.get())) hc++;
@@ -507,6 +520,7 @@ public final class ServerPayloadHandler {
             Map<String, Object> m2 = new HashMap<>();
             m2.put("name", sp.getName().getString());
             m2.put("hp", com.sanguosha.game.PlayerHp.get(sp.getUUID()));
+            m2.put("maxHp", com.sanguosha.game.PlayerHp.getMax(sp.getUUID()));
             int hc = 0;
             for (net.minecraft.world.item.ItemStack is : sp.getInventory().items) {
                 if (!is.isEmpty() && is.is(com.sanguosha.item.ModItems.CARD.get())) hc++;

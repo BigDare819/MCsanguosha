@@ -39,6 +39,8 @@ public record ActionPacket(String action, int cardIndex, int targetSeat, boolean
     public static final String FANJIAN = "fanjian";
     public static final String HP_UP = "hp_up";
     public static final String HP_DOWN = "hp_down";
+    public static final String MAX_HP_UP = "max_hp_up";
+    public static final String MAX_HP_DOWN = "max_hp_down";
     public static final String PLACE_CARD = "place_card";
     public static final String DROP_CARD = "drop_card";
     public static final String DEMOLISH = "demolish";

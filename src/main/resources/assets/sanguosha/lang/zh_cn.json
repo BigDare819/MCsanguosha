@@ -1,7 +1,10 @@
 {
   "key.categories.sanguosha": "三国杀",
+  "key.sanguosha.open_hp_ui": "打开血量面板",
   "key.sanguosha.hp_up": "血量+1",
   "key.sanguosha.hp_down": "血量-1",
+  "key.sanguosha.max_hp_up": "血量上限+1",
+  "key.sanguosha.max_hp_down": "血量上限-1",
   "key.sanguosha.toggle_ui": "开关手牌UI",
   "key.sanguosha.place_card": "放置选中牌",
   "key.sanguosha.open_table": "打开/关闭牌桌",
