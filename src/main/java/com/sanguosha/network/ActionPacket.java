@@ -18,25 +18,7 @@ public record ActionPacket(String action, int cardIndex, int targetSeat, boolean
             ByteBufCodecs.STRING_UTF8, ActionPacket::heroId,
             ActionPacket::new);
 
-    // 动作常量
-    public static final String JOIN = "join";
-    public static final String START = "start";
-    public static final String SORT_HAND = "sort_hand";
-    public static final String LEAVE = "leave";
-    public static final String RESET = "reset";
-    public static final String SELECT_HERO = "select_hero";
-    public static final String PLAY_CARD = "play_card";
-    public static final String PASS = "pass";
-    public static final String DISCARD = "discard";
-    public static final String RESPOND_YES = "respond_yes";
-    public static final String RESPOND_NO = "respond_no";
-    public static final String CONVERT_PLAY = "convert_play";
-    public static final String SKILL = "skill";
-    public static final String RECAST = "recast";
-    public static final String LIJIAN = "lijian";
-    public static final String RENDE = "rende";
-    public static final String CHOICE = "choice";
-    public static final String FANJIAN = "fanjian";
+    // 动作常量(线下实体卡牌模式)
     public static final String HP_UP = "hp_up";
     public static final String HP_DOWN = "hp_down";
     public static final String MAX_HP_UP = "max_hp_up";
@@ -56,8 +38,6 @@ public record ActionPacket(String action, int cardIndex, int targetSeat, boolean
     public static ActionPacket of(String action) { return new ActionPacket(action, -1, -1, false, ""); }
     public static ActionPacket of(String action, int cardIndex) { return new ActionPacket(action, cardIndex, -1, false, ""); }
     public static ActionPacket of(String action, int cardIndex, int targetSeat) { return new ActionPacket(action, cardIndex, targetSeat, false, ""); }
-    public static ActionPacket hero(String heroId) { return new ActionPacket(SELECT_HERO, -1, -1, false, heroId); }
-    public static ActionPacket respond(boolean yes, int cardIndex) { return new ActionPacket(yes ? RESPOND_YES : RESPOND_NO, cardIndex, -1, yes, ""); }
 
     @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
 }

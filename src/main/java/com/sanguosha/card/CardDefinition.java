@@ -7,7 +7,7 @@ public class CardDefinition {
     public final CardCategory category;
     public final CardSuit suit;
     public final int rank;         // 点数 1-13 (A=1, J=11, Q=12, K=13)
-    /** 效果处理器 key, 如 "slash"/"jink"/"peach"/"duel", 由 game.effect.EffectRegistry 解析 */
+    /** 效果处理器 key(卡牌数据字段,线下模式暂不使用) */
     public final String effect;
 
     public CardDefinition(String id, String name, CardCategory category, CardSuit suit, int rank, String effect) {

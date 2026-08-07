@@ -14,7 +14,6 @@ public final class ClientModEvents {
         event.register(ModKeybinds.OPEN_HP_UI);
         event.register(ModKeybinds.TOGGLE_UI);
         event.register(ModKeybinds.PLACE_CARD);
-        event.register(ModKeybinds.OPEN_TABLE);
         event.register(ModKeybinds.DROP_CARD);
         event.register(ModKeybinds.CLEAR_CARDS);
     }

@@ -2,14 +2,6 @@ package com.sanguosha.network;
 
 import com.google.gson.Gson;
 import com.sanguosha.SanguoshaMod;
-import com.sanguosha.card.CardDefinition;
-import com.sanguosha.game.GameManager;
-import com.sanguosha.game.GamePlayer;
-import com.sanguosha.game.SanguoshaGame;
-import com.sanguosha.game.Team;
-import com.sanguosha.hero.HeroDefinition;
-import com.sanguosha.skill.Skill;
-import com.sanguosha.skill.SkillRegistry;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
@@ -25,37 +17,18 @@ public final class ServerPayloadHandler {
     public static void handleAction(ActionPacket packet, IPayloadContext context) {
         context.enqueueWork(() -> {
             ServerPlayer player = (ServerPlayer) context.player();
-            SanguoshaGame game = GameManager.get();
             switch (packet.action()) {
-                case ActionPacket.JOIN -> game.join(player);
-                case ActionPacket.START -> game.start();
-                case ActionPacket.SORT_HAND -> game.sortHand(player);
-                case ActionPacket.LEAVE -> game.leave(player);
-                case ActionPacket.RESET -> GameManager.reset();
-                case ActionPacket.SELECT_HERO -> game.selectHero(player, packet.heroId());
-                case ActionPacket.PLAY_CARD -> game.playCard(player, packet.cardIndex(), packet.targetSeat());
-                case ActionPacket.PASS -> game.passTurn(player);
-                case ActionPacket.DISCARD -> game.discardCard(player, packet.cardIndex());
-                case ActionPacket.RESPOND_YES -> game.submitResponse(player, true, packet.cardIndex());
-                case ActionPacket.RESPOND_NO -> game.submitResponse(player, false, -1);
-                case ActionPacket.CONVERT_PLAY -> game.playCardConverted(player, packet.cardIndex(), packet.targetSeat(), packet.heroId());
-                case ActionPacket.SKILL -> game.useSkill(player, packet.heroId());
-                case ActionPacket.RECAST -> game.recastCard(player, packet.cardIndex());
-                case ActionPacket.LIJIAN -> game.useLijian(player, packet.targetSeat(), Integer.parseInt(packet.heroId()));
-                case ActionPacket.RENDE -> game.useRende(player, packet.cardIndex(), packet.targetSeat());
-                case ActionPacket.CHOICE -> game.submitChoice(player, packet.cardIndex());
-                case ActionPacket.FANJIAN -> game.useFanjian(player, packet.targetSeat());
             case ActionPacket.HP_UP -> {
                 int hpU = com.sanguosha.game.PlayerHp.adjust(player.getUUID(), 1);
                 com.sanguosha.SanguoshaMod.LOGGER.info("[HP] server adjust up -> {}", hpU);
                 player.displayClientMessage(net.minecraft.network.chat.Component.literal("♥ 血量: " + hpU), true);
-                syncAll(game, player.server);
+                syncHpList(player.server);
             }
             case ActionPacket.MAX_HP_UP -> {
                 int maxU = com.sanguosha.game.PlayerHp.adjustMax(player.getUUID(), 1);
                 com.sanguosha.SanguoshaMod.LOGGER.info("[HP] server adjust max up -> {}", maxU);
                 player.displayClientMessage(net.minecraft.network.chat.Component.literal("♠ 血量上限: " + maxU), true);
-                syncAll(game, player.server);
+                syncHpList(player.server);
             }
             case ActionPacket.PLACE_CARD -> placeSelectedCard(player, packet.cardIndex());
             case ActionPacket.DROP_CARD -> dropSelectedCard(player, packet.cardIndex());
@@ -72,17 +45,17 @@ public final class ServerPayloadHandler {
                 int hpD = com.sanguosha.game.PlayerHp.adjust(player.getUUID(), -1);
                 com.sanguosha.SanguoshaMod.LOGGER.info("[HP] server adjust down -> {}", hpD);
                 player.displayClientMessage(net.minecraft.network.chat.Component.literal("♥ 血量: " + hpD), true);
-                syncAll(game, player.server);
+                syncHpList(player.server);
             }
             case ActionPacket.MAX_HP_DOWN -> {
                 int maxD = com.sanguosha.game.PlayerHp.adjustMax(player.getUUID(), -1);
                 com.sanguosha.SanguoshaMod.LOGGER.info("[HP] server adjust max down -> {}", maxD);
                 player.displayClientMessage(net.minecraft.network.chat.Component.literal("♠ 血量上限: " + maxD), true);
-                syncAll(game, player.server);
+                syncHpList(player.server);
             }
                 default -> {}
             }
-            syncAll(game, player.server);
+            syncHpList(player.server);
         });
     }
 
@@ -426,147 +399,5 @@ public final class ServerPayloadHandler {
         for (ServerPlayer sp : server.getPlayerList().getPlayers()) {
             PacketDistributor.sendToPlayer(sp, new GameSyncPacket(root.toString()));
         }
-    }
-
-    /** 全量同步给所有在线玩家(游戏内用其视角,游戏外用通用视角) */
-    public static void syncAll(SanguoshaGame game, MinecraftServer server) {
-        com.sanguosha.SanguoshaMod.LOGGER.info("[UPD] syncAll called, online={}", server.getPlayerList().getPlayers().size());
-        for (ServerPlayer sp : server.getPlayerList().getPlayers()) {
-            GamePlayer p = null;
-            for (GamePlayer gp : game.players()) {
-                if (gp.uuid.equals(sp.getUUID())) { p = gp; break; }
-            }
-            PacketDistributor.sendToPlayer(sp, new GameSyncPacket(buildJson(game, p)));
-        }
-    }
-
-    /** 构建每个玩家视角的 JSON(手牌私有) */
-    public static String buildJson(SanguoshaGame game, GamePlayer viewer) {
-        com.sanguosha.SanguoshaMod.LOGGER.info("[UPD] buildJson called viewer={}", viewer == null ? "null" : viewer.name);
-        Map<String, Object> root = new LinkedHashMap<>();
-        root.put("state", game.state().name());
-        root.put("phase", game.phase().name());
-        root.put("winner", game.winner() == null ? "" : game.winner().name());
-        root.put("currentSeat", game.currentPlayer() == null ? -1 : game.currentPlayer().seat);
-        root.put("lastLog", game.lastLog());
-        root.put("recentLogs", game.logHistory());
-        root.put("deckCount", game.deckCount());
-        root.put("discardCount", game.discardCount());
-        // 弃牌堆最近几张
-        List<String> discardTop = new ArrayList<>();
-        for (CardDefinition dc : game.recentDiscards(3)) discardTop.add(dc.name);
-        root.put("discardTop", discardTop);
-        // 出牌动画事件
-        root.put("animFrom", game.lastAnimFrom());
-        root.put("animTo", game.lastAnimTo());
-        root.put("animCard", game.lastAnimCard());
-        root.put("animSeq", game.animSeq());
-
-        // 响应提示
-        String prompt = "";
-        if (game.pendingResponder() != null && viewer != null && viewer.uuid.equals(game.pendingResponder().uuid)) {
-            prompt = game.pendingType(); // "jink" / "slash"
-        }
-        root.put("prompt", prompt);
-        root.put("mySeat", viewer == null ? -1 : viewer.seat);
-
-        // 选择弹窗(花色/改判/流离/观星)
-        String choicePrompt = "";
-        List<String> choiceOptions = new ArrayList<>();
-        if (game.pendingChoice() != null && viewer != null && viewer.uuid.equals(game.pendingChoice().target.uuid)) {
-            choicePrompt = game.pendingChoice().prompt;
-            Collections.addAll(choiceOptions, game.pendingChoice().options);
-        }
-        root.put("choicePrompt", choicePrompt);
-        root.put("choiceOptions", choiceOptions);
-
-        // 玩家列表(公共)
-        List<Map<String, Object>> players = new ArrayList<>();
-        for (GamePlayer p : game.players()) {
-            Map<String, Object> m = new LinkedHashMap<>();
-            m.put("name", p.name);
-            m.put("seat", p.seat);
-            m.put("team", p.team == null ? "" : p.team.name());
-            m.put("hero", p.hero == null ? "" : p.hero.name);
-            m.put("heroId", p.hero == null ? "" : p.hero.id);
-            m.put("chained", p.chained);
-            m.put("drunk", p.drunk);
-            m.put("hp", p.hp);
-            m.put("maxHp", p.hero == null ? 0 : p.hero.maxHp);
-            m.put("alive", p.isAlive());
-            m.put("handCount", p.handCount());
-            m.put("weapon", p.weapon == null ? "" : p.weapon.name);
-            List<String> skillNames = new ArrayList<>();
-            if (p.hero != null) {
-                for (String sid : p.hero.skills) {
-                    Skill s = SkillRegistry.get(sid);
-                    if (s != null) skillNames.add(s.name() + "\u0001" + s.description());
-                }
-            }
-            m.put("skills", skillNames);
-            m.put("slashUsed", p.slashUsedThisTurn);
-            m.put("noSlashLimit", p.noSlashLimit);
-            m.put("armor", p.armor == null ? "" : p.armor.name);
-            m.put("horsePlus", p.horsePlus == null ? "" : p.horsePlus.name);
-            m.put("horseMinus", p.horseMinus == null ? "" : p.horseMinus.name);
-            List<String> judged = new ArrayList<>();
-            for (CardDefinition c : p.judgedZone) judged.add(c.name);
-            m.put("judged", judged);
-            players.add(m);
-        }
-        root.put("players", players);
-        List<Map<String, Object>> hpList = new ArrayList<>();
-        for (net.minecraft.server.level.ServerPlayer sp : net.neoforged.neoforge.server.ServerLifecycleHooks.getCurrentServer().getPlayerList().getPlayers()) {
-            Map<String, Object> m2 = new HashMap<>();
-            m2.put("name", sp.getName().getString());
-            m2.put("hp", com.sanguosha.game.PlayerHp.get(sp.getUUID()));
-            m2.put("maxHp", com.sanguosha.game.PlayerHp.getMax(sp.getUUID()));
-            int hc = 0;
-            for (net.minecraft.world.item.ItemStack is : sp.getInventory().items) {
-                if (!is.isEmpty() && is.is(com.sanguosha.item.ModItems.CARD.get())) hc++;
-            }
-            m2.put("handCount", hc);
-            hpList.add(m2);
-        }
-        root.put("hpList", hpList);
-
-        // 自己的手牌
-        List<Map<String, Object>> hand = new ArrayList<>();
-        for (CardDefinition c : (viewer == null ? java.util.List.<CardDefinition>of() : viewer.hand)) {
-            Map<String, Object> m = new LinkedHashMap<>();
-            m.put("id", c.id);
-            m.put("name", c.name);
-            m.put("suit", c.suit.name());
-            m.put("rank", c.rank);
-            m.put("cat", c.category.name());
-            m.put("effect", c.effect);
-            hand.add(m);
-        }
-        root.put("hand", hand);
-
-        // 选将选项
-        List<Map<String, Object>> heroOpts = new ArrayList<>();
-        for (HeroDefinition h : (viewer == null ? java.util.List.<HeroDefinition>of() : game.heroOptionsFor(viewer.uuid))) {
-            Map<String, Object> m = new LinkedHashMap<>();
-            m.put("id", h.id);
-            m.put("name", h.name);
-            m.put("faction", h.faction.name());
-            m.put("maxHp", h.maxHp);
-            List<Map<String, Object>> skills = new ArrayList<>();
-            for (String sid : h.skills) {
-                Skill s = SkillRegistry.get(sid);
-                if (s != null) {
-                    Map<String, Object> sm = new LinkedHashMap<>();
-                    sm.put("name", s.name());
-                    sm.put("desc", s.description());
-                    skills.add(sm);
-                }
-            }
-            m.put("skills", skills);
-            heroOpts.add(m);
-        }
-        root.put("heroOptions", heroOpts);
-
-        return GSON.toJson(root);
     }
 }
